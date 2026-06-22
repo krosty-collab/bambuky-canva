@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+<style>body{background:#eceae6;display:flex;justify-content:center;padding:24px}</style>
+</head><body>
+<div id="igMockup" class="ig-mockup">
+  <div class="ig-phone">
+    <div class="ig-header">
+      <div class="ig-avatar"></div>
+      <div class="ig-userblock"><div class="ig-user">bambuky</div><div class="ig-loc">Querétaro, México</div></div>
+      <div class="ig-more">&#8943;</div>
+    </div>
+    <div class="ig-media">
+      <img id="igImage" alt="slide">
+      <button class="ig-nav ig-prev" disabled>&#8249;</button>
+      <button class="ig-nav ig-next">&#8250;</button>
+      <div class="ig-count" id="igCount">1 / 7</div>
+    </div>
+    <div class="ig-dots" id="igDots"></div>
+    <div class="ig-actions">
+      <div class="ig-actions-left">
+        <span class="ig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5C19 16.5 12 21 12 21z"/></svg></span>
+        <span class="ig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg></span>
+        <span class="ig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></span>
+      </div>
+      <div class="ig-actions-right"><span class="ig-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"/></svg></span></div>
+    </div>
+    <div class="ig-caption"><strong>bambuky</strong> <span>Los primeros días de tu bebé… reserva tu sesión newborn en Querétaro.</span></div>
+  </div>
+</div>
+<script src="../js/templates.js"></script>
+<script src="../js/templates-ig.js"></script>
+<script>
+const dots=document.getElementById('igDots');
+for(let i=0;i<7;i++){const d=document.createElement('div');d.className='ig-dot'+(i===0?' active':'');dots.appendChild(d);}
+function go(){
+  const cv=document.createElement('canvas');cv.width=1080;cv.height=1350;
+  window.TEMPLATES_IG['Portada'](cv.getContext('2d'),{_page:1,_total:7,eyebrow:'Sesión newborn · Querétaro',title:'Lo que nadie te dice sobre las primeras semanas.',subtitle:'La ventana para fotografiar a tu recién nacido dura solo unos días.'});
+  document.getElementById('igImage').src=cv.toDataURL('image/jpeg',0.9);
+}
+if(document.fonts&&document.fonts.ready){document.fonts.ready.then(go);setTimeout(go,1600);}else go();
+</script>
+</body></html>

@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#E7E0D8;font-family:'DM Sans',sans-serif}
+  h2{color:#3D4A46;padding:14px 18px 0;margin:0;font-weight:600;letter-spacing:.05em}
+  .grid{display:flex;flex-wrap:wrap;gap:16px;padding:14px 18px}
+  .cell{display:flex;flex-direction:column;gap:6px}
+  .cell span{font-size:11px;color:#5B736B;letter-spacing:.1em;text-transform:uppercase}
+  /* simula ancho real en feed móvil (~ escala 0.21 = 230px) */
+  canvas{width:230px;height:287px;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+</style></head>
+<body>
+<h2>INSTAGRAM FIRST · tamaño aproximado en feed móvil</h2>
+<div class="grid" id="gridIG"></div>
+<script src="../js/templates.js"></script>
+<script src="../js/templates-ig.js"></script>
+<script>
+const samples = {
+  'Portada':{eyebrow:'Sesión newborn · Querétaro', title:'Lo que nadie te dice sobre las primeras semanas.', subtitle:'La ventana para fotografiar a tu recién nacido dura solo unos días.'},
+  'Problema':{eyebrow:'El problema', title:'Esperaste demasiado para reservar.', body:'Pasados los primeros días el bebé duerme menos profundo y las poses delicadas ya no son seguras.'},
+  'Urgencia biológica':{eyebrow:'Urgencia biológica', number:'10', subtitle:'días, no más', body:'La ventana ideal ocurre entre el día 5 y el día 15.'},
+  'Solución':{eyebrow:'La solución', title:'Una sesión pensada para su seguridad.', body:'Luz suave, fondos crema, temperatura controlada y poses seguras. Tú descansas; nosotros cuidamos todo.'},
+  'Objeción':{eyebrow:'¿Te preocupa?', title:'¿Y si mi bebé llora durante la sesión?', body:'Trabajamos a su ritmo. Pausamos para alimentar y consolar; su calma es la prioridad.'},
+  'Autoridad':{eyebrow:'Autoridad', title:'Más de 830 recién nacidos.', creds:['Especialización en seguridad neonatal','Certificación en primeros auxilios','Estudio cálido en Querétaro'], subtitle:'Una lección aprendida en cada sesión.'},
+  'CTA':{eyebrow:'Querétaro · México', title:'Tu bebé solo será recién nacido una vez.', subtitle:'Cupo limitado · Link en bio', cta:'Agenda tu fecha'}
+};
+function draw(set, grid){
+  let i=0;
+  Object.keys(samples).forEach((k)=>{
+    i++;
+    const cell=document.createElement('div'); cell.className='cell';
+    const lbl=document.createElement('span'); lbl.textContent=k; cell.appendChild(lbl);
+    const cv=document.createElement('canvas'); cv.width=1080; cv.height=1350; cell.appendChild(cv);
+    grid.appendChild(cell);
+    set[k](cv.getContext('2d'), Object.assign({_page:i,_total:7}, samples[k]));
+  });
+}
+let done=false;
+function go(){ if(done)return; done=true; draw(window.TEMPLATES_IG, document.getElementById('gridIG')); }
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(go); setTimeout(go,1800);} else go();
+</script>
+</body></html>

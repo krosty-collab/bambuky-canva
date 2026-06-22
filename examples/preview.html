@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#E7E0D8;font-family:'DM Sans',sans-serif}
+  .grid{display:flex;flex-wrap:wrap;gap:18px;padding:18px}
+  .cell{display:flex;flex-direction:column;gap:6px}
+  .cell span{font-size:12px;color:#5B736B;letter-spacing:.1em;text-transform:uppercase}
+  canvas{width:300px;height:375px;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+</style></head>
+<body>
+<div class="grid" id="grid"></div>
+<script src="../js/templates.js"></script>
+<script>
+const samples = {
+  'Portada':{eyebrow:'Sesión newborn · Querétaro', title:'Lo que nadie te dice sobre las primeras semanas.', subtitle:'La ventana para fotografiar a tu recién nacido dura solo unos días.'},
+  'Problema':{eyebrow:'El problema', title:'Esperaste demasiado para reservar.', body:'Pasados los primeros días el bebé duerme menos profundo, sus reflejos cambian y las poses más delicadas ya no son seguras.'},
+  'Urgencia biológica':{eyebrow:'Urgencia biológica', number:'10', subtitle:'días, no más', body:'La ventana ideal ocurre entre el día 5 y el día 15 de vida.'},
+  'Solución':{eyebrow:'La solución', title:'Una sesión pensada para su seguridad.', body:'Luz lateral suave, fondos crema y lino, temperatura controlada y poses seguras. Tú descansas; nosotros cuidamos cada detalle.'},
+  'Objeción':{eyebrow:'¿Te preocupa?', title:'¿Y si mi bebé llora durante la sesión?', body:'Trabajamos a su ritmo. Pausamos para alimentar y consolar; la calma del bebé es la prioridad.'},
+  'Autoridad':{eyebrow:'Autoridad', title:'Más de 830 recién nacidos fotografiados.', creds:['Especialización en newborn y seguridad neonatal','Certificación en manejo y primeros auxilios','Estudio cálido y climatizado en Querétaro'], subtitle:'Una lección aprendida en cada sesión.'},
+  'CTA':{eyebrow:'Querétaro · México', title:'Tu bebé solo será recién nacido una vez.', subtitle:'Cupo limitado · Link en bio', cta:'Agenda tu fecha'}
+};
+const grid = document.getElementById('grid');
+let i=0, done=false;
+function draw(){
+  if(done) return; done=true;
+  Object.keys(samples).forEach((k)=>{
+    i++;
+    const cell=document.createElement('div'); cell.className='cell';
+    const lbl=document.createElement('span'); lbl.textContent=k; cell.appendChild(lbl);
+    const cv=document.createElement('canvas'); cv.width=1080; cv.height=1350; cell.appendChild(cv);
+    grid.appendChild(cell);
+    const st=Object.assign({_page:i,_total:7}, samples[k]);
+    window.TEMPLATES[k](cv.getContext('2d'), st);
+  });
+}
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(draw); setTimeout(draw,1500);} else draw();
+</script>
+</body></html>

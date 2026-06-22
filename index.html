@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bambuky Content Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+  </head>
+  <body>
+    <div id="app" class="app">
+      <aside class="sidebar">
+        <header class="brand">
+          <h1>Bambuky Content Studio</h1>
+        </header>
+
+        <section class="panel">
+          <h2>Proyecto</h2>
+          <label>Nombre</label>
+          <input id="projectName" placeholder="Nombre del carrusel" />
+        </section>
+
+        <section class="panel">
+          <h2>Slides</h2>
+          <label>Lista</label>
+          <div id="slidesList" class="slides-list"></div>
+          <button id="addSlide">Añadir slide</button>
+        </section>
+
+        <section class="panel">
+          <h2>Vista</h2>
+          <div class="view-toggle">
+            <button id="viewClean" class="active">Canvas limpio</button>
+            <button id="viewIG">Preview Instagram</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Estilo visual</h2>
+          <label>Optimización</label>
+          <select id="styleMode">
+            <option value="ig" selected>Instagram First (lectura móvil)</option>
+            <option value="editorial">Editorial (revista premium)</option>
+          </select>
+        </section>
+
+        <section class="panel">
+          <h2>Contenido</h2>
+          <label>Plantilla</label>
+          <select id="templateSelect"></select>
+        </section>
+
+        <section class="panel form-fields">
+          <h2>Contenido (texto)</h2>
+          <label>Eyebrow</label>
+          <input id="fieldEyebrow" placeholder="Ej: Guía" />
+          <label>Título</label>
+          <input id="fieldTitle" placeholder="Título principal" />
+          <label>Subtítulo</label>
+          <input id="fieldSubtitle" placeholder="Subtítulo" />
+          <label>Número / dato <span style="color:var(--text-muted);font-weight:400">(plantilla Urgencia)</span></label>
+          <input id="fieldNumber" placeholder="Ej: +830, 10, 95%" />
+          <label>Credenciales <span style="color:var(--text-muted);font-weight:400">(una por línea · plantilla Autoridad)</span></label>
+          <textarea id="fieldCreds" rows="3" placeholder="Una credencial por línea"></textarea>
+          <label>Texto</label>
+          <textarea id="fieldBody" rows="4" placeholder="Texto del cuerpo"></textarea>
+          <div id="wordCounter" style="margin-top:6px;font-size:12px;color:var(--text-muted)">0 / 25 palabras visibles</div>
+          <div style="margin-top:2px;font-size:11px;color:var(--text-muted)">El límite de 25 palabras es por slide completo (eyebrow + título + subtítulo + texto).</div>
+        </section>
+
+        <section class="panel">
+          <h2>Imagen</h2>
+          <label>Subir foto</label>
+          <input id="imgUpload" type="file" accept="image/*" />
+        </section>
+
+        <section class="panel actions">
+          <h2>Exportar</h2>
+          <button id="exportSlide">Exportar Slide (JPG)</button>
+          <button id="exportCarousel">Exportar Carrusel (ZIP)</button>
+        </section>
+        <section class="panel">
+          <h2>IA asistida (Claude)</h2>
+          <label>Tema del carrusel (opcional)</label>
+          <textarea id="promptTopic" rows="2" placeholder="Ej: Cuándo reservar una sesión newborn"></textarea>
+          <label style="margin-top:8px">Objetivo del carrusel (opcional)</label>
+          <textarea id="promptGoal" rows="2" placeholder="Ej: Que reserven antes de los 15 días por DM"></textarea>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+            <button id="copyPromptClaude">Copiar prompt para Claude</button>
+            <button id="copyPromptOptimize">Copiar prompt para optimizar JSON</button>
+          </div>
+          <div id="promptMessage" style="margin-top:8px;font-size:13px;color:#2E7D32"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Importar JSON</h2>
+          <label>Pega aquí el JSON generado por Claude</label>
+          <textarea id="importTextarea" rows="6" placeholder='[ { "template":"cover","title":"..." } ]'></textarea>
+          <div style="margin-top:8px">
+            <button id="importApply">Importar y reemplazar slides</button>
+          </div>
+          <div id="importMessage" style="margin-top:8px;font-size:13px;color:#8B0000"></div>
+        </section>
+      </aside>
+
+      <!-- Template picker modal -->
+      <div id="templatePicker" class="template-picker hidden">
+        <div class="picker-backdrop"></div>
+        <div class="picker-panel">
+          <div class="picker-header">
+            <h3>Elige una plantilla</h3>
+            <button id="closePicker">Cerrar</button>
+          </div>
+          <div id="templateOptions" class="template-options"></div>
+        </div>
+      </div>
+
+      <main class="canvas-area">
+        <div class="preview-header">
+          <div class="meta">
+            <strong id="projectTitle">Los primeros días</strong>
+            <span id="slideIndicator">Slide 1 / 7</span>
+          </div>
+          <div class="preview-actions">
+            <button id="exportSlideTop">Exportar Slide</button>
+            <button id="exportCarouselTop">Exportar Carrusel</button>
+          </div>
+        </div>
+        <div class="preview-wrap">
+          <canvas id="previewCanvas" width="1080" height="1350"></canvas>
+        </div>
+
+        <!-- Mockup tipo Instagram (no se exporta) -->
+        <div id="igMockup" class="ig-mockup hidden">
+          <div class="ig-phone">
+            <div class="ig-header">
+              <div class="ig-avatar"></div>
+              <div class="ig-userblock">
+                <div class="ig-user">bambuky</div>
+                <div class="ig-loc">Querétaro, México</div>
+              </div>
+              <div class="ig-more">&#8943;</div>
+            </div>
+            <div class="ig-media">
+              <img id="igImage" alt="Vista previa del slide" />
+              <button class="ig-nav ig-prev" id="igPrev" aria-label="Slide anterior">&#8249;</button>
+              <button class="ig-nav ig-next" id="igNext" aria-label="Slide siguiente">&#8250;</button>
+              <div class="ig-count" id="igCount">1 / 7</div>
+            </div>
+            <div class="ig-dots" id="igDots"></div>
+            <div class="ig-actions">
+              <div class="ig-actions-left">
+                <span class="ig-ic" title="Me gusta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-9.5-9C1 9 2.5 5.5 6 5.5c2 0 3.2 1.2 4 2.3.8-1.1 2-2.3 4-2.3 3.5 0 5 3.5 3.5 6.5C19 16.5 12 21 12 21z"/></svg></span>
+                <span class="ig-ic" title="Comentar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-12.3 7.6L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg></span>
+                <span class="ig-ic" title="Enviar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg></span>
+              </div>
+              <div class="ig-actions-right">
+                <span class="ig-ic" title="Guardar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-5-7 5V4a1 1 0 0 1 1-1z"/></svg></span>
+              </div>
+            </div>
+            <div class="ig-caption"><strong>bambuky</strong> <span id="igCaption">Los primeros días de tu bebé…</span></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="js/zip.js"></script>
+    <script src="js/templates.js"></script>
+    <script src="js/templates-ig.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
