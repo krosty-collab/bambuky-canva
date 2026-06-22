@@ -6,7 +6,7 @@
    - Cormorant Garamond para emoción (títulos, citas) · DM Sans para estructura.
    - Logo discreto arriba-derecha · numeración discreta abajo-izquierda.
    - Eyebrow en mayúsculas + regla decorativa de 38×1.5px.
-   - Composición FIJA: el usuario sólo pega texto y sube foto.
+   - Layout fijo: el usuario pega texto, sube foto y ajusta su encuadre.
    - Funciona con foto y sin foto (variante oscura sobre foto / clara sobre crema).
 
    Todo se dibuja en coordenadas lógicas 1080×1350 vía frame(); las miniaturas
@@ -52,11 +52,17 @@ function frame(ctx, draw){
 }
 
 function coverRect(ctx, img, dx, dy, dw, dh){
-  const s = Math.max(dw / img.width, dh / img.height);
-  const iw = img.width * s, ih = img.height * s;
+  const source = img && img.img ? img.img : img;
+  if(!source) return;
+  const frame = img && img.img ? img : {};
+  const userScale = Math.max(0.8, Math.min(2, Number(frame.imageScale) || 1));
+  const userX = Number.isFinite(frame.imageX) ? frame.imageX : 0;
+  const userY = Number.isFinite(frame.imageY) ? frame.imageY : 0;
+  const s = Math.max(dw / source.width, dh / source.height) * userScale;
+  const iw = source.width * s, ih = source.height * s;
   ctx.save();
   ctx.beginPath(); ctx.rect(dx, dy, dw, dh); ctx.clip();
-  ctx.drawImage(img, dx + (dw - iw) / 2, dy + (dh - ih) / 2, iw, ih);
+  ctx.drawImage(source, dx + (dw - iw) / 2 + userX, dy + (dh - ih) / 2 + userY, iw, ih);
   ctx.restore();
 }
 
@@ -64,7 +70,7 @@ function coverRect(ctx, img, dx, dy, dw, dh){
    mode: 'bottom' (ancla texto abajo) | 'full' (oscurece todo) | 'soft' */
 function photoFull(ctx, imgObj, mode){
   if(!imgObj || !imgObj.img) return false;
-  coverRect(ctx, imgObj.img, 0, 0, W, H);
+  coverRect(ctx, imgObj, 0, 0, W, H);
   // tinte salvia muy suave (unifica temperatura)
   ctx.fillStyle = 'rgba(61,74,70,0.20)'; ctx.fillRect(0, 0, W, H);
   if(mode === 'bottom'){
@@ -101,7 +107,7 @@ function bgCharcoal(ctx){ ctx.fillStyle = PAL.charcoal; ctx.fillRect(0, 0, W, H)
 /* Logo discreto "BAMBUKY" */
 function logo(ctx, color, centered){
   ctx.save();
-  ctx.font = '500 16px "DM Sans", system-ui, sans-serif';
+  ctx.font = '500 16px "Manrope", system-ui, sans-serif';
   if('letterSpacing' in ctx) ctx.letterSpacing = '4px';
   ctx.fillStyle = color;
   ctx.textAlign = centered ? 'center' : 'right';
@@ -115,7 +121,7 @@ function pageNum(ctx, state, color){
   if(!p) return;
   const txt = String(p).padStart(2, '0') + (t ? '  /  ' + String(t).padStart(2, '0') : '');
   ctx.save();
-  ctx.font = '500 13px "DM Sans", system-ui, sans-serif';
+  ctx.font = '500 13px "Manrope", system-ui, sans-serif';
   if('letterSpacing' in ctx) ctx.letterSpacing = '3px';
   ctx.fillStyle = color; ctx.textAlign = 'left';
   ctx.fillText(txt, MX, H - 74);
@@ -127,7 +133,7 @@ function eyebrow(ctx, text, x, y, color, align){
   if(!text) return y;
   align = align || 'left';
   ctx.save();
-  ctx.font = '500 14px "DM Sans", system-ui, sans-serif';
+  ctx.font = '500 14px "Manrope", system-ui, sans-serif';
   if('letterSpacing' in ctx) ctx.letterSpacing = '3.5px';
   ctx.fillStyle = color; ctx.textAlign = align;
   ctx.fillText(text.toUpperCase(), align === 'center' ? W / 2 : x, y);
@@ -213,7 +219,7 @@ const TEMPLATES = {
 
       if(state.subtitle){
         ctx.fillStyle = c.body;
-        ctx.font = '300 19px "DM Sans", system-ui, sans-serif';
+        ctx.font = '300 19px "Manrope", system-ui, sans-serif';
         drawWrapped(ctx, state.subtitle, MX, end + 48, W - MX * 2 - 40, 28, 2);
       }
       pageNum(ctx, state, c.page);
@@ -238,7 +244,7 @@ const TEMPLATES = {
 
       if(state.body){
         ctx.fillStyle = c.body;
-        ctx.font = '300 20px "DM Sans", system-ui, sans-serif';
+        ctx.font = '300 20px "Manrope", system-ui, sans-serif';
         drawWrapped(ctx, state.body, MX, end + 52, W - MX * 2 - 30, 32, 6);
       }
       pageNum(ctx, state, c.page);
@@ -265,7 +271,7 @@ const TEMPLATES = {
 
       if(state.subtitle){
         ctx.save();
-        ctx.font = '500 13px "DM Sans", system-ui, sans-serif';
+        ctx.font = '500 13px "Manrope", system-ui, sans-serif';
         if('letterSpacing' in ctx) ctx.letterSpacing = '3px';
         ctx.fillStyle = c.eyebrow; ctx.textAlign = 'center';
         ctx.fillText(state.subtitle.toUpperCase(), W / 2, cy + 86);
@@ -291,7 +297,7 @@ const TEMPLATES = {
       const hasImg = !!(state.image && state.image.img);
 
       if(hasImg){
-        coverRect(ctx, state.image.img, 0, 0, col, H);
+        coverRect(ctx, state.image, 0, 0, col, H);
         ctx.fillStyle = 'rgba(61,74,70,0.12)'; ctx.fillRect(0, 0, col, H);
       } else {
         const g = ctx.createLinearGradient(0, 0, col, H);
@@ -314,7 +320,7 @@ const TEMPLATES = {
 
       if(state.body){
         ctx.fillStyle = c.body;
-        ctx.font = '300 18px "DM Sans", system-ui, sans-serif';
+        ctx.font = '300 18px "Manrope", system-ui, sans-serif';
         drawWrapped(ctx, state.body, tx, end + 44, tw, 30, 6);
       }
       pageNum(ctx, state, hasImg ? '#D8E2DC' : c.page);
@@ -340,7 +346,7 @@ const TEMPLATES = {
       if(state.body){
         ctx.fillStyle = c.rule; ctx.fillRect(MX, end + 36, 38, 1.5);
         ctx.fillStyle = c.body;
-        ctx.font = '300 19px "DM Sans", system-ui, sans-serif';
+        ctx.font = '300 19px "Manrope", system-ui, sans-serif';
         drawWrapped(ctx, state.body, MX, end + 80, W - MX * 2 - 30, 30, 5);
       }
       pageNum(ctx, state, c.page);
@@ -372,7 +378,7 @@ const TEMPLATES = {
       lines = lines.slice(0, 4);
 
       let ly = end + 70;
-      ctx.font = '300 19px "DM Sans", system-ui, sans-serif';
+      ctx.font = '300 19px "Manrope", system-ui, sans-serif';
       for(let i = 0; i < lines.length; i++){
         diamond(ctx, MX + 6, ly - 7, 6, 'rgba(200,184,154,0.75)');
         ctx.fillStyle = c.body; ctx.textAlign = 'left';
@@ -401,7 +407,7 @@ const TEMPLATES = {
       const cy = H / 2;
       if(state.eyebrow){
         ctx.save();
-        ctx.font = '500 13px "DM Sans", system-ui, sans-serif';
+        ctx.font = '500 13px "Manrope", system-ui, sans-serif';
         if('letterSpacing' in ctx) ctx.letterSpacing = '3.5px';
         ctx.fillStyle = c.eyebrow; ctx.textAlign = 'center';
         ctx.fillText(state.eyebrow.toUpperCase(), W / 2, cy - 150);
@@ -416,7 +422,7 @@ const TEMPLATES = {
 
       if(state.subtitle){
         ctx.save();
-        ctx.font = '500 13px "DM Sans", system-ui, sans-serif';
+        ctx.font = '500 13px "Manrope", system-ui, sans-serif';
         if('letterSpacing' in ctx) ctx.letterSpacing = '3px';
         ctx.fillStyle = c.eyebrow; ctx.textAlign = 'center';
         ctx.fillText(state.subtitle.toUpperCase(), W / 2, end + 90);
@@ -425,7 +431,7 @@ const TEMPLATES = {
 
       // botón sólo borde, sin relleno
       const label = (state.cta || 'Agenda tu fecha').toUpperCase();
-      ctx.font = '500 14px "DM Sans", system-ui, sans-serif';
+      ctx.font = '500 14px "Manrope", system-ui, sans-serif';
       if('letterSpacing' in ctx) ctx.letterSpacing = '3px';
       const bw = Math.min(W - MX * 2, ctx.measureText(label).width + 80);
       const bh = 58, bx = (W - bw) / 2, by = end + 130;

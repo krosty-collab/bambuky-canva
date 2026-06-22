@@ -10,10 +10,10 @@
   --accent: var(--sage-2);
 }
 /* Fuentes editoriales cargadas vía Google Fonts en index.html
-   (Cormorant Garamond + DM Sans). El canvas las usa una vez listas. */
+   (Cormorant Garamond + Manrope). El canvas las usa una vez listas. */
 *{box-sizing:border-box}
-.app-font-body{font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;}
-html,body,#app{height:100%;margin:0;font-family:'DM Sans', Arial, sans-serif;color:var(--text-main);background:var(--bg-cream)}
+.app-font-body{font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;}
+html,body,#app{height:100%;margin:0;font-family:'Manrope', Arial, sans-serif;color:var(--text-main);background:var(--bg-cream)}
 .app{display:flex;height:100vh}
 .sidebar{width:440px;flex-shrink:0;padding:24px 26px;border-right:1px solid rgba(91,115,107,0.06);background:linear-gradient(180deg,var(--linen),var(--bg-cream));overflow:auto}
 .brand h1{font-family:'Cormorant Garamond',serif;margin:0 0 12px 0;font-size:20px;color:var(--sage-3);letter-spacing:0.2px}
@@ -27,8 +27,39 @@ html,body,#app{height:100%;margin:0;font-family:'DM Sans', Arial, sans-serif;col
 .slides-list button{padding:10px;border-radius:10px;border:1px solid rgba(91,115,107,0.06);background:transparent;text-align:left;color:var(--text-main);font-weight:600}
 .slides-list button.active{background:linear-gradient(90deg,var(--sage-1),#fff);box-shadow:inset 0 0 0 2px rgba(132,165,157,0.06)}
 .actions button{display:block;width:100%;padding:10px;margin-bottom:8px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700}
-.swatches{display:flex;gap:8px}
-.swatch{width:36px;height:36px;border-radius:8px;border:1px solid rgba(91,115,107,0.08);cursor:pointer}
+/* ===== Tema global: botones con fondo de color real ===== */
+.theme-btns{display:flex;gap:8px}
+.theme-btn{flex:1;padding:12px 8px;border-radius:10px;border:2px solid transparent;cursor:pointer;font-weight:600;font-size:12px;text-align:center;transition:border-color .15s,box-shadow .15s;letter-spacing:0.3px}
+.theme-btn[data-theme="heritage-blue"]{background:#4D5D70;color:#F5F3EF}
+.theme-btn[data-theme="sage-garden"]{background:#D9DDD1;color:#3F4A3C}
+.theme-btn[data-theme="blush-editorial"]{background:#F3E6E2;color:#54433F}
+.theme-btn:hover{box-shadow:0 0 0 2px rgba(91,115,107,0.25)}
+.theme-btn.active{border-color:#fff;box-shadow:0 0 0 3px var(--sage-3)}
+
+/* ===== Selector visual de color de texto (por slide) ===== */
+.tcm-btns{display:flex;gap:8px;margin-top:4px}
+.tcm-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:2px solid transparent;border-radius:10px;padding:8px 6px;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.tcm-btn:hover{border-color:rgba(91,115,107,0.18)}
+.tcm-btn.active{border-color:var(--sage-3);box-shadow:0 0 0 2px rgba(91,115,107,0.20)}
+.tcm-preview{display:flex;align-items:center;gap:6px;width:52px;height:28px;border-radius:6px;padding:0 8px;pointer-events:none}
+.tcm-letter{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;line-height:1}
+.tcm-bar{width:16px;height:3px;border-radius:2px}
+.tcm-base{background:#EEF0EA}.tcm-base .tcm-letter{color:#3D4A46}.tcm-base .tcm-bar{background:#84A59D}
+.tcm-white{background:#4D5D70}.tcm-white .tcm-letter{color:#F5F3EF}.tcm-white .tcm-bar{background:#B9CBDD}
+.tcm-accent{background:#EEF0EA}.tcm-accent .tcm-letter{color:#84A59D}.tcm-accent .tcm-bar{background:#F5F3EF;border:1px solid rgba(91,115,107,0.18)}
+.tcm-dark{background:#F5F3EF}.tcm-dark .tcm-letter{color:#2E3A2B}.tcm-dark .tcm-bar{background:#87947E}
+.tcm-label{font-size:10px;font-weight:600;color:var(--text-muted);pointer-events:none}
+.tcm-btn.active .tcm-label{color:var(--sage-3)}
+
+/* ===== Toggle experimentales ===== */
+.legacy-toggle{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text-muted);cursor:pointer;user-select:none}
+.legacy-toggle input{accent-color:var(--sage-2);margin:0}
+
+/* ===== Controles de escala de fuente ===== */
+.font-scale{float:right;display:inline-flex;align-items:center;gap:2px}
+.font-scale .fs-btn{width:20px;height:20px;border-radius:5px;border:1px solid rgba(91,115,107,0.22);background:#fff;color:var(--sage-3);font-size:13px;font-weight:600;cursor:pointer;padding:0;display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.font-scale .fs-btn:hover{background:var(--sage-1)}
+.font-scale .fs-val{font-size:10px;min-width:30px;text-align:center;color:var(--text-muted)}
 .canvas-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:18px;overflow:auto}
 .preview-header{width:100%;max-width:1080px;display:flex;justify-content:space-between;margin-bottom:12px}
 /* El canvas se sigue usando internamente para render y export, pero ya no se
@@ -63,6 +94,13 @@ canvas{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow:0 1
 /* Fila de archivo de imagen */
 .img-file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
 .img-file-name{font-size:12px;color:var(--text-main);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+
+/* Controles manuales de encuadre por slide */
+.image-frame-controls{margin-top:12px;padding-top:10px;border-top:1px solid rgba(91,115,107,0.10)}
+.image-frame-controls label{display:flex;align-items:center;justify-content:space-between;margin:10px 0 6px}
+.image-frame-controls label span{color:var(--sage-3);font-weight:600}
+.image-frame-controls input[type=range]{width:100%;accent-color:var(--sage-2)}
+.image-frame-controls button{width:100%;margin-top:12px}
 
 /* Sugerencia de modo automático */
 .mode-suggestion{margin-top:8px;font-size:12px;line-height:1.5;color:var(--sage-3);min-height:1px}
@@ -113,7 +151,7 @@ canvas{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow:0 1
 /* El teléfono se escala lo más grande posible para que el slide se lea a simple
    vista en cualquier dispositivo: limitado por el ancho disponible y por la
    altura de la ventana (el post completo cabe en pantalla). */
-.ig-phone{width:min(96vw, 540px, calc((100vh - 60px) * 0.62));min-width:300px;background:#fff;border:1px solid #e8e3dc;border-radius:16px;overflow:hidden;box-shadow:0 18px 50px rgba(61,74,70,0.14);font-family:'DM Sans',Arial,sans-serif}
+.ig-phone{width:min(96vw, 540px, calc((100vh - 60px) * 0.62));min-width:300px;background:#fff;border:1px solid #e8e3dc;border-radius:16px;overflow:hidden;box-shadow:0 18px 50px rgba(61,74,70,0.14);font-family:'Manrope',Arial,sans-serif}
 .ig-header{display:flex;align-items:center;gap:10px;padding:11px 12px}
 .ig-avatar{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--sage-1),var(--sage-2));box-shadow:0 0 0 2px #fff,0 0 0 3px #e3ddd4}
 .ig-userblock{flex:1;line-height:1.25;min-width:0}

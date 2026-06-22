@@ -26,25 +26,62 @@ const imgUpload = document.getElementById('imgUpload');
 const imgFileRow = document.getElementById('imgFileRow');
 const imgFileName = document.getElementById('imgFileName');
 const imgRemove = document.getElementById('imgRemove');
+const imageFrameControls = document.getElementById('imageFrameControls');
+const imageZoom = document.getElementById('imageZoom');
+const imageZoomValue = document.getElementById('imageZoomValue');
+const imageX = document.getElementById('imageX');
+const imageXValue = document.getElementById('imageXValue');
+const imageY = document.getElementById('imageY');
+const imageYValue = document.getElementById('imageYValue');
+const imageFrameReset = document.getElementById('imageFrameReset');
 const variantSelect = document.getElementById('variantSelect');
-const modeSelect = document.getElementById('modeSelect');
+const themeSwatchesGlobal = document.getElementById('themeSwatchesGlobal');
+const contrastSelect = document.getElementById('contrastSelect');
+const textColorBtns = document.getElementById('textColorButtons');
 const modeSuggestion = document.getElementById('modeSuggestion');
+const resetFontScalesBtn = document.getElementById('resetFontScales');
 
 // Rellena los selects de variante y modo según la plantilla activa.
+let _showLegacy = false;
 function populateVariantOptions(tpl, current){
   if(!variantSelect) return;
   const list = (window.VARIANTS && window.VARIANTS[tpl]) || [];
   variantSelect.innerHTML = '';
-  list.forEach(v=>{ const o = document.createElement('option'); o.value = v.id; o.textContent = v.label; variantSelect.appendChild(o); });
+  const hasLegacy = list.some(v => v.legacy);
+  list.forEach(v=>{
+    if(v.hidden) return;
+    if(v.legacy && !_showLegacy) return;
+    const o = document.createElement('option');
+    o.value = v.id;
+    o.textContent = v.legacy ? '⚬ ' + v.label : v.label;
+    variantSelect.appendChild(o);
+  });
+  const legacyToggle = document.getElementById('legacyToggle');
+  if(legacyToggle) legacyToggle.style.display = hasLegacy ? '' : 'none';
   variantSelect.value = window.normalizeVariant ? window.normalizeVariant(tpl, current) : (list[0] && list[0].id);
 }
 function populateModeOptions(tpl, current){
-  if(!modeSelect) return;
-  const list = (window.MODES && window.MODES[tpl]) || ['light'];
-  const labels = window.MODE_LABELS || {};
-  modeSelect.innerHTML = '';
-  list.forEach(m=>{ const o = document.createElement('option'); o.value = m; o.textContent = labels[m] || m; modeSelect.appendChild(o); });
-  modeSelect.value = window.normalizeMode ? window.normalizeMode(tpl, current) : list[0];
+  setActiveGlobalTheme(project.globalTheme || 'sage-garden');
+}
+function setActiveGlobalTheme(themeId){
+  if(!themeSwatchesGlobal) return;
+  themeSwatchesGlobal.querySelectorAll('.theme-btn').forEach(s=>{
+    s.classList.toggle('active', s.dataset.theme===themeId);
+  });
+}
+function setActiveTextColor(mode){
+  if(!textColorBtns) return;
+  textColorBtns.querySelectorAll('.tcm-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.tcm===mode);
+  });
+}
+function setContrastUI(contrast){
+  if(contrastSelect) contrastSelect.value = contrast || 'light';
+}
+function applyGlobalTheme(themeId){
+  project.globalTheme = themeId;
+  project.slides.forEach(s=>{ s.mode = themeId; });
+  setActiveGlobalTheme(themeId);
 }
 
 // Campos que usa cada plantilla (para mostrar solo lo relevante en "Contenido").
@@ -69,7 +106,7 @@ const exportSlideBtn = document.getElementById('exportSlide');
 const exportCarouselBtn = document.getElementById('exportCarousel');
 
 let project = {
-  name: 'Los primeros días', slides: [], current: 0
+  name: 'Los primeros días', slides: [], current: 0, globalTheme: 'sage-garden'
 };
 
 // Vista única: mockup de Instagram. Debe declararse ANTES de la primera
@@ -87,10 +124,16 @@ function createSlide(templateKey){
   return {
     template: tpl,
     variant: window.defaultVariant ? window.defaultVariant(tpl) : '',
-    mode: window.defaultMode ? window.defaultMode(tpl) : 'light',
+    mode: (project && project.globalTheme) || 'sage-garden',
+    contrast: 'light',
+    textColorMode: 'base-accent',
+    fontScaleTitle: 1, fontScaleSubtitle: 1, fontScaleBody: 1, fontScaleCta: 1, fontScaleEyebrow: 1,
     eyebrow: '', title: '', subtitle: '', body: '', number: '', handle:'', cta:'',
     steps: [], creds: [], philosophy:'',
-      image: null
+    image: null,
+    imageScale: 1,
+    imageX: 0,
+    imageY: 0
   };
 }
 
@@ -114,10 +157,10 @@ function loadDemo(){
     {template:'Objeción', eyebrow:'La pregunta más frecuente', title:'¿Y si mi bebé llega en fecha diferente?', body:'No pasa nada. La fecha exacta la confirmamos cuando nace. Siempre nos adaptamos.'},
 
     // 6 · Autoridad
-    {template:'Autoridad', variant:'experiencia', mode:'dark', eyebrow:'', title:'Bambuky · Estudio Newborn · Querétaro', creds:['Más de 10 años especializados','Más de 830 recién nacidos fotografiados','Protocolo de seguridad neonatal en cada sesión','Gemelos, prematuros y partos especiales'], subtitle:'Aquí siempre gana el bebé.'},
+    {template:'Autoridad', variant:'filosofia', mode:'heritage-blue', eyebrow:'', title:'Ninguna fotografía vale más que la seguridad de un bebé.', creds:['Más de 10 años especializados','Más de 830 recién nacidos fotografiados','Protocolo de seguridad neonatal en cada sesión','Gemelos, prematuros y partos especiales'], subtitle:'Aquí siempre gana el bebé.'},
 
     // 7 · CTA
-    {template:'CTA', variant:'pregunta', mode:'dark', eyebrow:'Querétaro · México', title:'¿Cuándo llega tu bebé?', subtitle:'Cuéntanos tu fecha aproximada. Con gusto te orientamos, sin compromiso.', cta:'Escríbenos por DM'}
+    {template:'CTA', variant:'reserva', mode:'heritage-blue', eyebrow:'Querétaro · México', title:'¿Cuándo llega tu bebé?', subtitle:'Cuéntanos tu fecha aproximada. Con gusto te orientamos, sin compromiso.', cta:'Escríbenos por DM'}
   ];
   project.slides = demo.map(d=>Object.assign(createSlide(d.template), d));
   project.caption = 'Cuando nace un bebé, hay una etapa muy corta que suele pasar demasiado rápido.\n\nEntre el día 5 y el día 15 de vida, los recién nacidos duermen de una manera diferente. Sus reflejos todavía los llevan a posiciones que muy pronto dejarán de poder hacer. Y su cuerpo aún recuerda el espacio donde vivió los últimos nueve meses.\n\nEsa es la etapa ideal para una sesión newborn.\n\nEn Bambuky hemos fotografiado más de 830 recién nacidos en Querétaro en más de 10 años. Y lo que aprendimos es que cuando las familias reservan con tiempo, la sesión ocurre con mucha más tranquilidad para todos.\n\n¿Cómo funciona? Apartas tu lugar durante el embarazo. Cuando nace tu bebé, coordinamos juntos la fecha exacta. Nos adaptamos a lo que necesite tu familia.\n\nSi tienes dudas o quieres saber si hay lugar disponible para tu fecha, escríbenos por DM. Con gusto te orientamos. 🍃';
@@ -153,26 +196,44 @@ function loadSlideToUI(){
   fieldCta.value = s.cta||'';
   populateVariantOptions(s.template, s.variant);
   populateModeOptions(s.template, s.mode);
+  setContrastUI(s.contrast);
+  setActiveTextColor(s.textColorMode || 'base-accent');
   if(modeSuggestion) modeSuggestion.textContent = '';
   updateFieldVisibility(s.template);
   updateImageUI();
+  updateFontScaleUI(s);
   updateWordCounter();
-  // image transform controls removed in production mode (fixed composition)
 }
 
 // Refleja en la UI si el slide actual tiene imagen (nombre + botón quitar).
 function updateImageUI(){
   if(!imgFileRow) return;
-  const img = project.slides[project.current] && project.slides[project.current].image;
+  const s = project.slides[project.current];
+  const img = s && s.image;
   if(img){
     imgFileName.textContent = img.name || 'Imagen cargada';
     imgFileRow.style.display = '';
+    if(imageFrameControls) imageFrameControls.style.display = '';
   } else {
     imgFileRow.style.display = 'none';
+    if(imageFrameControls) imageFrameControls.style.display = 'none';
+  }
+  if(!s) return;
+  if(imageZoom){
+    imageZoom.value = Math.round((s.imageScale || 1) * 100);
+    if(imageZoomValue) imageZoomValue.textContent = imageZoom.value + '%';
+  }
+  if(imageX){
+    imageX.value = Number.isFinite(s.imageX) ? s.imageX : 0;
+    if(imageXValue) imageXValue.textContent = imageX.value;
+  }
+  if(imageY){
+    imageY.value = Number.isFinite(s.imageY) ? s.imageY : 0;
+    if(imageYValue) imageYValue.textContent = imageY.value;
   }
 }
 
-// Contador en vivo del presupuesto de 25 palabras por slide.
+// Contador en vivo del presupuesto de 30 palabras por slide.
 const wordCounter = document.getElementById('wordCounter');
 function countWordsUI(t){ return t ? t.trim().split(/\s+/).filter(Boolean).length : 0; }
 function updateWordCounter(){
@@ -181,8 +242,16 @@ function updateWordCounter(){
   let n = countWordsUI(fieldEyebrow.value) + countWordsUI(fieldTitle.value)
         + countWordsUI(fieldSubtitle.value) + countWordsUI(fieldBody.value);
   if(!isAutoridad) n += countWordsUI((fieldCreds.value || '').replace(/\n/g, ' '));
-  wordCounter.textContent = n + ' / 25 palabras visibles' + (isAutoridad ? ' (credenciales sin límite)' : '');
-  wordCounter.style.color = (n > 25) ? '#8B0000' : 'var(--text-muted)';
+  wordCounter.textContent = n + ' / 30 palabras visibles' + (isAutoridad ? ' (credenciales sin límite)' : '');
+  wordCounter.style.color = (n > 30) ? '#8B0000' : 'var(--text-muted)';
+}
+
+function updateFontScaleUI(s){
+  document.querySelectorAll('.font-scale').forEach(el=>{
+    const field = el.dataset.scale;
+    const val = s[field] || 1;
+    el.querySelector('.fs-val').textContent = Math.round(val*100)+'%';
+  });
 }
 
 function saveUIToSlide(){
@@ -196,8 +265,11 @@ function saveUIToSlide(){
   s.body = fieldBody.value;
   s.cta = fieldCta.value;
   if(variantSelect && variantSelect.value) s.variant = variantSelect.value;
-  if(modeSelect && modeSelect.value) s.mode = modeSelect.value;
-  // image transform controls removed in production mode (fixed composition)
+  s.mode = project.globalTheme || 'sage-garden';
+  if(contrastSelect && contrastSelect.value) s.contrast = contrastSelect.value;
+  if(imageZoom) s.imageScale = Math.max(0.8, Math.min(2, Number(imageZoom.value) / 100 || 1));
+  if(imageX) s.imageX = Math.max(-100, Math.min(100, Number(imageX.value) || 0));
+  if(imageY) s.imageY = Math.max(-100, Math.min(100, Number(imageY.value) || 0));
 }
 
 // image loader
@@ -207,6 +279,9 @@ imgUpload.addEventListener('change', async (e)=>{
   img.onload = ()=>{
     const obj = {img, name: file.name};
     project.slides[project.current].image = obj;
+    project.slides[project.current].imageScale = 1;
+    project.slides[project.current].imageX = 0;
+    project.slides[project.current].imageY = 0;
     autoContrast(img);           // sugerir y aplicar modo según la foto
     updateImageUI(); render();
   };
@@ -219,6 +294,28 @@ if(imgRemove) imgRemove.addEventListener('click', ()=>{
   if(imgUpload) imgUpload.value = '';
   if(modeSuggestion) modeSuggestion.textContent = '';
   updateImageUI(); render();
+});
+
+function updateImageFrameFromUI(){
+  const s = project.slides[project.current];
+  if(!s) return;
+  saveUIToSlide();
+  updateImageUI();
+  render();
+}
+
+[imageZoom, imageX, imageY].forEach(el=>{
+  el && el.addEventListener('input', updateImageFrameFromUI);
+});
+
+if(imageFrameReset) imageFrameReset.addEventListener('click', ()=>{
+  const s = project.slides[project.current];
+  if(!s) return;
+  s.imageScale = 1;
+  s.imageX = 0;
+  s.imageY = 0;
+  updateImageUI();
+  render();
 });
 
 // Analiza luminosidad/contraste de la foto y devuelve {avg, sd} (0–255).
@@ -236,15 +333,14 @@ function analyzePhoto(img){
   }catch(e){ return null; }
 }
 
-// Sugiere un modo disponible para la plantilla según la foto.
+// Sugiere un tema de color según la foto subida.
 function suggestMode(tpl, stats){
-  const avail = (window.MODES && window.MODES[tpl]) || ['light'];
+  const avail = (window.MODES && window.MODES[tpl]) || ['sage-garden'];
   let want, reason;
-  if(stats.sd > 68 && avail.includes('overlay')){ want = 'overlay'; reason = 'foto con mucho contraste'; }
-  else if(stats.avg >= 165){ want = 'light'; reason = 'foto clara'; }
-  else if(stats.avg <= 95){ want = 'dark'; reason = 'foto oscura'; }
-  else { want = (stats.avg >= 130) ? 'light' : 'dark'; reason = (stats.avg >= 130) ? 'foto clara' : 'foto oscura'; }
-  if(!avail.includes(want)) want = avail.includes('dark') ? 'dark' : avail[0];
+  if(stats.avg <= 110){ want = 'heritage-blue'; reason = 'foto oscura, tema de alto contraste'; }
+  else if(stats.avg >= 170){ want = 'blush-editorial'; reason = 'foto clara y cálida'; }
+  else { want = 'sage-garden'; reason = 'tono neutro, tema versátil'; }
+  if(!avail.includes(want)) want = avail[0];
   return { mode: want, reason };
 }
 
@@ -253,12 +349,10 @@ function autoContrast(img){
   const s = project.slides[project.current];
   const stats = analyzePhoto(img);
   if(!stats){ if(modeSuggestion) modeSuggestion.textContent = ''; return; }
-  const sug = suggestMode(s.template, stats);
-  s.mode = sug.mode;
-  populateModeOptions(s.template, s.mode);
+  s.contrast = 'overlay';
+  setContrastUI(s.contrast);
   if(modeSuggestion){
-    const label = (window.MODE_LABELS && window.MODE_LABELS[sug.mode]) || sug.mode;
-    modeSuggestion.innerHTML = `Sugerencia automática: <span class="sg-strong">${label}</span> (${sug.reason}). Puedes cambiarla.`;
+    modeSuggestion.innerHTML = `Contraste ajustado a <span class="sg-strong">Overlay</span> (foto detectada). Puedes cambiarlo.`;
   }
 }
 
@@ -272,16 +366,50 @@ if(templateSelect) templateSelect.addEventListener('change', ()=>{
   const s = project.slides[project.current];
   s.template = templateSelect.value;
   s.variant = window.defaultVariant ? window.defaultVariant(s.template) : '';
-  s.mode = window.defaultMode ? window.defaultMode(s.template) : 'light';
+  s.mode = project.globalTheme || 'sage-garden';
+  s.contrast = 'light';
   populateVariantOptions(s.template, s.variant);
   populateModeOptions(s.template, s.mode);
+  setContrastUI(s.contrast);
   updateFieldVisibility(s.template);
   updateWordCounter(); refreshSlidesList(); render();
 });
 
-// Cambio de variante o modo
+// Cambio de variante o contraste (per-slide)
 if(variantSelect) variantSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
-if(modeSelect) modeSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
+if(contrastSelect) contrastSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
+// Color de texto por slide (botones visuales)
+if(textColorBtns) textColorBtns.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tcm-btn'); if(!btn) return;
+  project.slides[project.current].textColorMode = btn.dataset.tcm;
+  setActiveTextColor(btn.dataset.tcm);
+  render();
+});
+// Tema global: aplica a todas las slides
+if(themeSwatchesGlobal) themeSwatchesGlobal.addEventListener('click', (e)=>{
+  const sw = e.target.closest('.theme-btn'); if(!sw) return;
+  applyGlobalTheme(sw.dataset.theme);
+  render();
+});
+// Font scale +/- controls
+document.querySelectorAll('.font-scale .fs-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const el = btn.closest('.font-scale');
+    const field = el.dataset.scale;
+    const s = project.slides[project.current];
+    const cur = s[field] || 1;
+    const delta = btn.classList.contains('fs-inc') ? 0.05 : -0.05;
+    s[field] = Math.max(0.85, Math.min(1.25, Math.round((cur + delta)*100)/100));
+    el.querySelector('.fs-val').textContent = Math.round(s[field]*100)+'%';
+    render();
+  });
+});
+if(resetFontScalesBtn) resetFontScalesBtn.addEventListener('click', ()=>{
+  const s = project.slides[project.current];
+  ['fontScaleTitle','fontScaleSubtitle','fontScaleBody','fontScaleCta','fontScaleEyebrow'].forEach(k=>{ s[k]=1; });
+  updateFontScaleUI(s);
+  render();
+});
 
 // will open template picker to choose template when adding
 // (template picker UI defined in index.html)
@@ -338,7 +466,14 @@ function chooseTemplateForNewSlide(templateKey){
 addSlideBtn.addEventListener('click', ()=> openTemplatePicker());
 closePicker && closePicker.addEventListener('click', ()=> closeTemplatePicker());
 
-// Position editing has been disabled for the production mode — fixed compositions.
+// Legacy/experimental variants toggle
+const legacyCheck = document.getElementById('legacyCheck');
+if(legacyCheck) legacyCheck.addEventListener('change', ()=>{
+  _showLegacy = legacyCheck.checked;
+  const s = project.slides[project.current];
+  populateVariantOptions(s.template, s.variant);
+  render();
+});
 
 // palette controls removed in production mode
 
@@ -349,12 +484,16 @@ function clearCanvas(){ ctx.clearRect(0,0,canvas.width, canvas.height); ctx.fill
 function render(){
   clearCanvas(); const s = project.slides[project.current];
   const state = Object.assign({}, s);
-  state.image = s.image;
+  state.image = s.image ? Object.assign({}, s.image, {
+    imageScale: s.imageScale || 1,
+    imageX: Number.isFinite(s.imageX) ? s.imageX : 0,
+    imageY: Number.isFinite(s.imageY) ? s.imageY : 0
+  }) : null;
   // numeración discreta de página para las plantillas
   state._page = project.current + 1;
   state._total = project.slides.length;
 
-  // Enforce max 25 visible words per slide. Strategy: keep eyebrow and title, then fit body/creds/steps into remaining.
+  // Enforce max 30 visible words per slide. Strategy: keep eyebrow and title, then fit body/creds/steps into remaining.
   function countWords(t){ if(!t) return 0; return t.toString().trim().split(/\s+/).filter(Boolean).length; }
   function truncateWordsLocal(t, max){ if(!t) return ''; const words = t.trim().split(/\s+/); if(words.length<=max) return t; return words.slice(0,max).join(' ') + '…'; }
 
@@ -362,11 +501,11 @@ function render(){
   reserved += countWords(state.eyebrow);
   reserved += countWords(state.title);
   // count minimal mandatory fields
-  let remaining = 25 - reserved;
+  let remaining = 30 - reserved;
   if(remaining < 0){ // truncate title first
-    const allowedTitle = Math.max(0,25 - countWords(state.eyebrow));
+    const allowedTitle = Math.max(0,30 - countWords(state.eyebrow));
     state.title = truncateWordsLocal(state.title, allowedTitle);
-    remaining = 25 - (countWords(state.eyebrow) + countWords(state.title));
+    remaining = 30 - (countWords(state.eyebrow) + countWords(state.title));
   }
 
   // Now allocate remaining to subtitle then body then creds/steps
@@ -470,6 +609,9 @@ function applyImportedContent(parsed, mode){
     base.creds = Array.isArray(inc.creds)? inc.creds : (inc.creds? [inc.creds] : (Array.isArray(inc.credits)?inc.credits: base.creds));
     base.steps = Array.isArray(inc.steps)? inc.steps : base.steps;
     base.philosophy = inc.philosophy || inc.note || base.philosophy || '';
+    if(Number.isFinite(Number(inc.imageScale))) base.imageScale = Math.max(0.8, Math.min(2, Number(inc.imageScale)));
+    if(Number.isFinite(Number(inc.imageX))) base.imageX = Math.max(-100, Math.min(100, Number(inc.imageX)));
+    if(Number.isFinite(Number(inc.imageY))) base.imageY = Math.max(-100, Math.min(100, Number(inc.imageY)));
 
     // image: accept inline data URLs (user selection still preferred)
     if(inc.image && typeof inc.image === 'string'){
@@ -483,6 +625,13 @@ function applyImportedContent(parsed, mode){
   // if incoming is empty but mode is replace, clear slides
   if(incoming.length===0 && mode==='replace') project.slides = [];
   else project.slides = newSlides.length? newSlides : project.slides;
+  // Derive global theme from first slide's mode
+  if(project.slides.length){
+    const firstMode = project.slides[0].mode || 'sage-garden';
+    project.globalTheme = firstMode;
+    project.slides.forEach(s=>{ s.mode = firstMode; });
+  }
+  setActiveGlobalTheme(project.globalTheme);
   project.current = 0;
   refreshSlidesList(); loadSlideToUI(); render(); updateCaptionUI();
 }
@@ -561,30 +710,31 @@ LÍMITES DE PALABRAS POR CAMPO (por diseño; respétalos para que el JSON quede 
 - eyebrow: máximo 5 palabras.
 - title: máximo 9 palabras.
 - subtitle: máximo 12 palabras.
-- body: máximo 3 líneas ≈ máximo 18 palabras.
+- body: máximo 3 líneas ≈ máximo 22 palabras.
 - number: 1 dato muy corto (ej. "+830", "10", "5–15").
 - creds (solo "autoridad"): 3 a 4 items, cada uno máximo 6 palabras.
 - cta: máximo 5 palabras.
-- REGLA GLOBAL: máximo 25 palabras VISIBLES por slide sumando eyebrow + title + subtitle + body. (Las credenciales de "autoridad" no cuentan en ese límite.)
+- REGLA GLOBAL: máximo 30 palabras VISIBLES por slide sumando eyebrow + title + subtitle + body. Priorizar frases cortas y legibles para Instagram. Usar palabras resaltadas entre llaves {} solo cuando aporte claridad visual. (Las credenciales de "autoridad" no cuentan en ese límite.)
 
 CAMPOS, VARIANTES Y MODOS DISPONIBLES (usa solo los campos listados para cada template)
 ${ref}
 
 CÓMO ELEGIR
-- variant: define la composición. Si no estás seguro, omítela (se usa la principal) o elige la más adecuada al mensaje.
-- mode: contraste visual de la slide. Si la slide llevará foto clara usa "light"; foto oscura "dark"; foto con mucho contraste "overlay"; "split" muestra foto + bloque de color; "highlight" resalta (solo autoridad). Si no estás seguro, usa "light".
+- variant: define la composición visual. Si no estás seguro, omítela (se usa la principal) o elige la más adecuada al mensaje.
+- mode: tema de color del carrusel. Opciones: "sage-garden" (newborn, calma, familia), "heritage-blue" (premium, confianza, editorial), "blush-editorial" (maternidad, emoción, vínculo). Si no estás seguro, usa "sage-garden". Usa el mismo tema en todo el carrusel excepto autoridad y CTA que pueden usar "heritage-blue".
+- Puedes usar llaves {palabra} para resaltar palabras clave en los textos. Se renderizan con el color accent del tema.
 
 ESTRUCTURA EXACTA DEL JSON
 {
   "projectName": "string",
   "slides": [
-    { "template": "portada",   "variant": "hero",        "mode": "light", "eyebrow": "", "title": "", "subtitle": "" },
-    { "template": "problema",  "variant": "pregunta",    "mode": "light", "eyebrow": "", "title": "", "body": "" },
-    { "template": "urgencia",  "variant": "ventana",     "mode": "light", "eyebrow": "", "number": "", "subtitle": "", "body": "" },
-    { "template": "solucion",  "variant": "proceso",     "mode": "light", "eyebrow": "", "title": "", "body": "" },
-    { "template": "objecion",  "variant": "pregunta",    "mode": "light", "eyebrow": "", "title": "", "body": "" },
-    { "template": "autoridad", "variant": "experiencia", "mode": "dark",  "eyebrow": "", "title": "", "creds": ["", "", ""], "subtitle": "" },
-    { "template": "cta",       "variant": "pregunta",    "mode": "dark",  "eyebrow": "Querétaro · México", "title": "", "subtitle": "", "cta": "Escríbenos por DM" }
+    { "template": "portada",   "variant": "split",      "mode": "sage-garden", "eyebrow": "", "title": "", "subtitle": "" },
+    { "template": "problema",  "variant": "foto-frase",  "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
+    { "template": "urgencia",  "variant": "tiempo",      "mode": "sage-garden", "eyebrow": "", "number": "", "subtitle": "", "body": "" },
+    { "template": "solucion",  "variant": "metodo",      "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
+    { "template": "objecion",  "variant": "pregunta",    "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
+    { "template": "autoridad", "variant": "filosofia",   "mode": "heritage-blue", "eyebrow": "", "title": "", "creds": ["", "", ""], "subtitle": "" },
+    { "template": "cta",       "variant": "reserva",     "mode": "heritage-blue", "eyebrow": "Querétaro · México", "title": "", "subtitle": "", "cta": "Escríbenos por DM" }
   ],
   "caption": "Pie de publicación de 3 a 6 párrafos cortos, tono Bambuky, con un llamado final a escribir por DM.",
   "hashtags": "10 a 15 hashtags en una sola cadena separada por espacios, incluyendo fotografía newborn y Querétaro."
@@ -600,7 +750,7 @@ REGLAS:
 - Responde ÚNICAMENTE con JSON válido. Sin markdown, sin explicaciones.
 - Conserva exactamente los mismos templates, variant, mode y las mismas llaves de cada slide.
 - Respeta los límites de diseño: eyebrow ≤ 5 palabras, title ≤ 9, subtitle ≤ 12, body ≤ 3 líneas (≈18 palabras), cta ≤ 5, credenciales ≤ 6 palabras c/u.
-- Máximo 25 palabras visibles por slide (eyebrow + title + subtitle + body); prioriza titulares cortos y potentes.
+- Máximo 30 palabras visibles por slide (eyebrow + title + subtitle + body); prioriza titulares cortos y potentes.
 - Mantén la voz Bambuky: cálida, humana, tranquila y experta.
 - Conserva el SEO local (Querétaro / fotografía newborn Querétaro) y el caption/hashtags si ya estaban.
 
@@ -671,7 +821,7 @@ exportCarouselBtn.addEventListener('click', async ()=>{
   refreshSlidesList(); loadSlideToUI(); render();
 });
 
-// Interaction simplified: dragging and manual positioning disabled in production mode.
+// Interaction simplified: manual framing uses sliders for now; drag/touch can build on the same fields.
 // (La inicialización ocurre al final del archivo, una vez declarados los
 //  elementos del mockup de Instagram, para evitar TDZ en syncIGPreview.)
 
@@ -726,6 +876,7 @@ if(igNext) igNext.addEventListener('click', ()=> igGo(1));
 // Inicialización (al final: ya están declarados los elementos del mockup que
 // usa syncIGPreview, llamado desde render()).
 if(projectNameInput) projectNameInput.value = project.name || '';
+setActiveGlobalTheme(project.globalTheme);
 refreshSlidesList(); loadSlideToUI(); render(); updateCaptionUI();
 
 // Re-render once the editorial fonts have loaded (Cormorant / DM Sans),

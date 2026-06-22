@@ -6,7 +6,7 @@
     <title>Bambuky Content Studio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
   </head>
   <body>
@@ -15,6 +15,17 @@
         <header class="brand">
           <h1>Bambuky Content Studio</h1>
         </header>
+
+        <!-- 0 · TEMA GLOBAL -->
+        <section class="panel">
+          <h2><span class="step">&bull;</span> Tema del carrusel</h2>
+          <p class="panel-hint">Se aplica a todas las slides. El modo de contraste se elige por slide.</p>
+          <div id="themeSwatchesGlobal" class="theme-btns" style="margin-top:4px">
+            <button type="button" class="theme-btn" data-theme="heritage-blue" title="Heritage Blue">Azul</button>
+            <button type="button" class="theme-btn" data-theme="sage-garden" title="Sage Garden">Verde</button>
+            <button type="button" class="theme-btn" data-theme="blush-editorial" title="Blush Editorial">Rosa</button>
+          </div>
+        </section>
 
         <!-- 1 · GUÍA ASISTIDA PARA CLAUDE -->
         <section class="panel">
@@ -63,6 +74,30 @@
           <select id="templateSelect"></select>
           <label style="margin-top:10px">Variante</label>
           <select id="variantSelect"></select>
+          <label id="legacyToggle" class="legacy-toggle" style="display:none"><input type="checkbox" id="legacyCheck" /> Mostrar experimentales</label>
+        </section>
+
+        <!-- 4b · COLOR DE TEXTO (por slide) -->
+        <section class="panel">
+          <label>Color del texto <span class="opt">(este slide)</span></label>
+          <div id="textColorButtons" class="tcm-btns">
+            <button type="button" class="tcm-btn" data-tcm="base-accent" title="Base + Acento">
+              <span class="tcm-preview tcm-base"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Base</span>
+            </button>
+            <button type="button" class="tcm-btn" data-tcm="white-accent" title="Blanco + Acento">
+              <span class="tcm-preview tcm-white"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Blanco</span>
+            </button>
+            <button type="button" class="tcm-btn" data-tcm="accent-white" title="Acento + Blanco">
+              <span class="tcm-preview tcm-accent"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Acento</span>
+            </button>
+            <button type="button" class="tcm-btn" data-tcm="dark-accent" title="Oscuro + Acento">
+              <span class="tcm-preview tcm-dark"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Oscuro</span>
+            </button>
+          </div>
         </section>
 
         <!-- 5 · SUBIR IMAGEN -->
@@ -73,8 +108,24 @@
             <span id="imgFileName" class="img-file-name"></span>
             <button id="imgRemove" class="btn-ghost-danger" type="button">Quitar imagen</button>
           </div>
-          <label style="margin-top:12px">Modo de contraste</label>
-          <select id="modeSelect"></select>
+          <div id="imageFrameControls" class="image-frame-controls" style="display:none">
+            <label for="imageZoom">Zoom <span id="imageZoomValue">100%</span></label>
+            <input id="imageZoom" type="range" min="80" max="200" value="100" />
+
+            <label for="imageX">Horizontal <span id="imageXValue">0</span></label>
+            <input id="imageX" type="range" min="-100" max="100" value="0" />
+
+            <label for="imageY">Vertical <span id="imageYValue">0</span></label>
+            <input id="imageY" type="range" min="-100" max="100" value="0" />
+
+            <button id="imageFrameReset" class="btn-secondary" type="button">Restablecer encuadre</button>
+          </div>
+          <label style="margin-top:12px">Modo de contraste <span class="opt">(este slide)</span></label>
+          <select id="contrastSelect">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="overlay">Overlay</option>
+          </select>
           <div id="modeSuggestion" class="mode-suggestion"></div>
         </section>
 
@@ -82,15 +133,15 @@
         <section class="panel form-fields">
           <h2><span class="step">6</span> Contenido editable</h2>
           <div class="field-group" id="grp-eyebrow">
-            <label>Eyebrow</label>
+            <label>Eyebrow <span class="font-scale" data-scale="fontScaleEyebrow"><button type="button" class="fs-btn fs-dec">−</button><span class="fs-val">100%</span><button type="button" class="fs-btn fs-inc">+</button></span></label>
             <input id="fieldEyebrow" placeholder="Ej: Fotografía Newborn Querétaro" />
           </div>
           <div class="field-group" id="grp-title">
-            <label>Título</label>
+            <label>Título <span class="font-scale" data-scale="fontScaleTitle"><button type="button" class="fs-btn fs-dec">−</button><span class="fs-val">100%</span><button type="button" class="fs-btn fs-inc">+</button></span></label>
             <input id="fieldTitle" placeholder="Título principal" />
           </div>
           <div class="field-group" id="grp-subtitle">
-            <label>Subtítulo</label>
+            <label>Subtítulo <span class="font-scale" data-scale="fontScaleSubtitle"><button type="button" class="fs-btn fs-dec">−</button><span class="fs-val">100%</span><button type="button" class="fs-btn fs-inc">+</button></span></label>
             <input id="fieldSubtitle" placeholder="Subtítulo" />
           </div>
           <div class="field-group" id="grp-number">
@@ -102,15 +153,16 @@
             <textarea id="fieldCreds" rows="3" placeholder="Una credencial por línea"></textarea>
           </div>
           <div class="field-group" id="grp-body">
-            <label>Texto</label>
+            <label>Texto <span class="font-scale" data-scale="fontScaleBody"><button type="button" class="fs-btn fs-dec">−</button><span class="fs-val">100%</span><button type="button" class="fs-btn fs-inc">+</button></span></label>
             <textarea id="fieldBody" rows="4" placeholder="Texto del cuerpo"></textarea>
           </div>
           <div class="field-group" id="grp-cta">
-            <label>Botón / CTA</label>
+            <label>Botón / CTA <span class="font-scale" data-scale="fontScaleCta"><button type="button" class="fs-btn fs-dec">−</button><span class="fs-val">100%</span><button type="button" class="fs-btn fs-inc">+</button></span></label>
             <input id="fieldCta" placeholder="Ej: Escríbenos por DM" />
           </div>
-          <div id="wordCounter" class="word-counter">0 / 25 palabras visibles</div>
-          <div class="panel-hint">El límite de 25 palabras es por slide completo (eyebrow + título + subtítulo + texto).</div>
+          <button id="resetFontScales" class="btn-secondary" type="button" style="margin-top:6px;width:100%">Restablecer tamaños</button>
+          <div id="wordCounter" class="word-counter">0 / 30 palabras visibles</div>
+          <div class="panel-hint">El límite de 30 palabras es por slide completo (eyebrow + título + subtítulo + texto).</div>
         </section>
 
         <!-- 7 · EXPORTAR -->
