@@ -52,8 +52,8 @@ html,body,#app{height:100%;margin:0;font-family:'Manrope', Arial, sans-serif;col
 .tcm-btn.active .tcm-label{color:var(--sage-3)}
 
 /* ===== Toggle experimentales ===== */
-.legacy-toggle{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text-muted);cursor:pointer;user-select:none}
-.legacy-toggle input{accent-color:var(--sage-2);margin:0}
+.legacy-toggle,.logo-toggle{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--text-muted);cursor:pointer;user-select:none}
+.legacy-toggle input,.logo-toggle input{accent-color:var(--sage-2);margin:0}
 
 /* ===== Controles de escala de fuente ===== */
 .font-scale{float:right;display:inline-flex;align-items:center;gap:2px}

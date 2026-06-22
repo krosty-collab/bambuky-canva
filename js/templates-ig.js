@@ -231,6 +231,7 @@ function setScales(state){
     cta:state.fontScaleCta||1,
     eyebrow:state.fontScaleEyebrow||1
   };
+  _showLogo=(state.showLogo!==false);
 }
 
 function gradientBg(ctx, t){
@@ -244,7 +245,7 @@ function hasPhoto(state){ return !!(state.image && state.image.img); }
 
 function fullPhoto(ctx, image){
   if(!image||!image.img) return false;
-  coverRect(ctx, image.img, 0,0,W,H); return true;
+  coverRect(ctx, image, 0,0,W,H); return true;
 }
 
 function overlay(ctx, t, direction, strength){
@@ -266,7 +267,9 @@ function overlay(ctx, t, direction, strength){
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
 }
 
+var _showLogo=true;
 function bambukyLogo(ctx, color, centered){
+  if(!_showLogo) return;
   ctx.save();
   ctx.font='500 18px '+FONT_BODY;
   if('letterSpacing' in ctx) ctx.letterSpacing='4px';
@@ -338,6 +341,7 @@ function checkMark(ctx, x, y, size, color){
 
 // Masthead "BAMBUKY" reutilizable (idéntico en portada e interiores).
 function fMasthead(ctx, color, align, size, tracking, y, alpha){
+  if(!_showLogo) return;
   ctx.save();
   ctx.font='400 '+size+'px '+FONT_TITLE;
   if('letterSpacing' in ctx) ctx.letterSpacing=tracking+'px';
@@ -589,11 +593,11 @@ const TEMPLATES_V = {
         c=txtPhoto(t);
       } else if(cm==='dark'){
         ctx.fillStyle=t.bg; ctx.fillRect(0,0,W,H);
-        if(photo){ coverRect(ctx,state.image.img,0,splitY,W,H-splitY); overlay(ctx,t,'full',0.3); }
+        if(photo){ coverRect(ctx,state.image,0,splitY,W,H-splitY); overlay(ctx,t,'full',0.3); }
         c=txtSolid(t);
       } else {
         ctx.fillStyle=t.bg; ctx.fillRect(0,0,W,splitY);
-        if(photo) coverRect(ctx,state.image.img,0,splitY,W,H-splitY);
+        if(photo) coverRect(ctx,state.image,0,splitY,W,H-splitY);
         else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,splitY,W,H-splitY); }
         c=txtSolid(t);
       }

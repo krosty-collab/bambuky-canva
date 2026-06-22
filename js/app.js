@@ -198,6 +198,7 @@ function loadSlideToUI(){
   populateModeOptions(s.template, s.mode);
   setContrastUI(s.contrast);
   setActiveTextColor(s.textColorMode || 'base-accent');
+  if(logoCheck) logoCheck.checked = (s.showLogo !== false);
   if(modeSuggestion) modeSuggestion.textContent = '';
   updateFieldVisibility(s.template);
   updateImageUI();
@@ -465,6 +466,13 @@ function chooseTemplateForNewSlide(templateKey){
 
 addSlideBtn.addEventListener('click', ()=> openTemplatePicker());
 closePicker && closePicker.addEventListener('click', ()=> closeTemplatePicker());
+
+// Logo toggle (per-slide)
+const logoCheck = document.getElementById('logoCheck');
+if(logoCheck) logoCheck.addEventListener('change', ()=>{
+  project.slides[project.current].showLogo = logoCheck.checked;
+  render();
+});
 
 // Legacy/experimental variants toggle
 const legacyCheck = document.getElementById('legacyCheck');
