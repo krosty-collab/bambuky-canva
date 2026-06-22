@@ -168,6 +168,76 @@ function drawAccent(ctx, text, x, y, maxW, lh, maxLines, align, baseColor, accen
    ============================================================ */
 var FONT_TITLE  = '"Cormorant Garamond", Georgia, serif';
 var FONT_BODY   = '"Manrope", system-ui, sans-serif';
+var FONT_SUBTITLE = FONT_TITLE;
+var FONT_CTA    = FONT_BODY;
+
+var FONT_PRESETS = {
+  'editorial-bambuky': {
+    label:'Editorial Bambuky',
+    title:'"Cormorant Garamond", Georgia, serif',
+    subtitle:'"Cormorant Garamond", Georgia, serif',
+    body:'"Manrope", system-ui, sans-serif',
+    cta:'"Manrope", system-ui, sans-serif'
+  },
+  'revista-clasica': {
+    label:'Revista Clásica',
+    title:'"Libre Baskerville", Georgia, serif',
+    subtitle:'"Libre Baskerville", Georgia, serif',
+    body:'"Manrope", system-ui, sans-serif',
+    cta:'"Manrope", system-ui, sans-serif'
+  },
+  'lujo-suave': {
+    label:'Lujo Suave',
+    title:'"Playfair Display", Georgia, serif',
+    subtitle:'"Playfair Display", Georgia, serif',
+    body:'"Manrope", system-ui, sans-serif',
+    cta:'"Manrope", system-ui, sans-serif'
+  },
+  'moderno-premium': {
+    label:'Moderno Premium',
+    title:'"Fraunces", Georgia, serif',
+    subtitle:'"Fraunces", Georgia, serif',
+    body:'"Inter", system-ui, sans-serif',
+    cta:'"Inter", system-ui, sans-serif'
+  },
+  'minimal-gallery': {
+    label:'Minimal Gallery',
+    title:'"Instrument Serif", Georgia, serif',
+    subtitle:'"Instrument Serif", Georgia, serif',
+    body:'"Manrope", system-ui, sans-serif',
+    cta:'"Manrope", system-ui, sans-serif'
+  }
+};
+
+var FONT_FAMILIES = [
+  {id:'Cormorant Garamond', css:'"Cormorant Garamond", Georgia, serif'},
+  {id:'Libre Baskerville',  css:'"Libre Baskerville", Georgia, serif'},
+  {id:'Playfair Display',   css:'"Playfair Display", Georgia, serif'},
+  {id:'Fraunces',           css:'"Fraunces", Georgia, serif'},
+  {id:'Instrument Serif',   css:'"Instrument Serif", Georgia, serif'},
+  {id:'Manrope',            css:'"Manrope", system-ui, sans-serif'},
+  {id:'Inter',              css:'"Inter", system-ui, sans-serif'}
+];
+
+function setFontPreset(presetId){
+  var p = FONT_PRESETS[presetId] || FONT_PRESETS['editorial-bambuky'];
+  FONT_TITLE = p.title;
+  FONT_SUBTITLE = p.subtitle;
+  FONT_BODY = p.body;
+  FONT_CTA = p.cta;
+}
+
+function setFontCustom(title, subtitle, body, cta){
+  FONT_TITLE = title || FONT_PRESETS['editorial-bambuky'].title;
+  FONT_SUBTITLE = subtitle || FONT_TITLE;
+  FONT_BODY = body || FONT_PRESETS['editorial-bambuky'].body;
+  FONT_CTA = cta || FONT_BODY;
+}
+
+window.FONT_PRESETS = FONT_PRESETS;
+window.FONT_FAMILIES = FONT_FAMILIES;
+window.setFontPreset = setFontPreset;
+window.setFontCustom = setFontCustom;
 
 var SX = MX;
 var ST = 80;
@@ -312,7 +382,7 @@ function fineRule(ctx, x, y, w, color){
 function ctaPill(ctx, label, y, fillColor, textColor, borderColor){
   label=(label||'Escríbenos por DM').toUpperCase();
   ctx.save();
-  ctx.font='500 '+Math.round(24*_scales.cta)+'px '+FONT_BODY;
+  ctx.font='500 '+Math.round(24*_scales.cta)+'px '+FONT_CTA;
   if('letterSpacing' in ctx) ctx.letterSpacing='3px';
   var bw=Math.min(W-SX*2, ctx.measureText(label).width+90), bh=64, bx=(W-bw)/2;
   ctx.strokeStyle=borderColor||fillColor||'#fff'; ctx.lineWidth=1.5;
@@ -1011,7 +1081,7 @@ const TEMPLATES_V = {
       if(state.subtitle){ ctx.font='400 '+Math.round(28*_scales.subtitle)+'px '+FONT_BODY;
         end=drawAccent(ctx,state.subtitle,SX,end+42,Math.round(W*0.78),38,2,'left',c.p,c.a); }
       var labelM=(state.cta||'Reserva tu sesión').toUpperCase();
-      ctx.save(); ctx.font='500 '+Math.round(22*_scales.cta)+'px '+FONT_BODY;
+      ctx.save(); ctx.font='500 '+Math.round(22*_scales.cta)+'px '+FONT_CTA;
       if('letterSpacing' in ctx) ctx.letterSpacing='3px';
       var bwM=ctx.measureText(labelM).width+64, bhM=58, byM=end+46;
       ctx.strokeStyle=c.a; ctx.lineWidth=1.5; roundRect(ctx,SX,byM,bwM,bhM,3,false,true);
@@ -1024,7 +1094,7 @@ const TEMPLATES_V = {
       var end=drawAccent(ctx,state.title||'¿Quieres recordar esta etapa?',W/2,1156,W-SX*2-40,Math.min(ts.lh,46),2,'center',c.h,c.a);
       if(state.subtitle){ ctx.font='400 20px '+FONT_BODY;
         end=drawAccent(ctx,state.subtitle,W/2,end+40,W-SX*2-80,28,1,'center',c.p,c.a); }
-      ctx.save(); ctx.font='500 18px '+FONT_BODY;
+      ctx.save(); ctx.font='500 18px '+FONT_CTA;
       if('letterSpacing' in ctx) ctx.letterSpacing='3px';
       ctx.fillStyle=c.a; ctx.textAlign='center'; ctx.fillText((state.cta||'Escríbenos por DM').toUpperCase(),W/2,end+56); ctx.restore();
 
@@ -1063,7 +1133,7 @@ const TEMPLATES_V = {
       var cy=H/2;
       ctx.font='300 '+ts.fs+'px '+FONT_TITLE;
       var end=drawAccent(ctx,state.title||'Tu bebé solo será así una vez.',W/2,cy-30,W-SX*2-40,ts.lh,3,'center',c.h,c.a);
-      ctx.font='400 '+Math.round(34*_scales.cta)+'px '+FONT_BODY;
+      ctx.font='400 '+Math.round(34*_scales.cta)+'px '+FONT_CTA;
       drawAccent(ctx,state.cta||'Agenda tu sesión',W/2,end+96,W-SX*2,42,1,'center',c.p,c.a);
       fotograma(ctx,state,c.p);
     }

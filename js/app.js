@@ -106,7 +106,7 @@ const exportSlideBtn = document.getElementById('exportSlide');
 const exportCarouselBtn = document.getElementById('exportCarousel');
 
 let project = {
-  name: 'Los primeros días', slides: [], current: 0, globalTheme: 'sage-garden'
+  name: 'Los primeros días', slides: [], current: 0, globalTheme: 'sage-garden', fontPreset: 'editorial-bambuky'
 };
 
 // Vista única: mockup de Instagram. Debe declararse ANTES de la primera
@@ -410,6 +410,70 @@ if(themeSwatchesGlobal) themeSwatchesGlobal.addEventListener('click', (e)=>{
   applyGlobalTheme(sw.dataset.theme);
   render();
 });
+// Font preset global
+const fontPresetSelect = document.getElementById('fontPresetSelect');
+const fontPreview = document.getElementById('fontPreview');
+const fontAdvancedCheck = document.getElementById('fontAdvancedCheck');
+const fontAdvancedPanel = document.getElementById('fontAdvancedPanel');
+const fontSelBody = document.getElementById('fontSelBody');
+const fontSelTitle = document.getElementById('fontSelTitle');
+const fontSelSubtitle = document.getElementById('fontSelSubtitle');
+const fontSelCta = document.getElementById('fontSelCta');
+
+function populateFontSelects(){
+  var families = window.FONT_FAMILIES || [];
+  [fontSelBody,fontSelTitle,fontSelSubtitle,fontSelCta].forEach(function(sel){
+    if(!sel) return; sel.innerHTML='';
+    families.forEach(function(f){ var o=document.createElement('option'); o.value=f.css; o.textContent=f.id; o.style.fontFamily=f.css; sel.appendChild(o); });
+  });
+}
+populateFontSelects();
+
+function updateFontPreview(){
+  if(!fontPreview) return;
+  var presets=window.FONT_PRESETS||{};
+  var p=presets[project.fontPreset]||presets['editorial-bambuky'];
+  fontPreview.innerHTML='<div class="fp-title" style="font-family:'+p.title+'">Los primeros días</div>'
+    +'<div class="fp-sub" style="font-family:'+p.subtitle+'">El arte de fotografiar</div>'
+    +'<div class="fp-ui" style="font-family:'+p.body+'">Eyebrow · Botón</div>';
+}
+
+function applyFontPreset(presetId){
+  project.fontPreset=presetId;
+  if(window.setFontPreset) window.setFontPreset(presetId);
+  if(fontPresetSelect) fontPresetSelect.value=presetId;
+  var p=(window.FONT_PRESETS||{})[presetId]||(window.FONT_PRESETS||{})['editorial-bambuky'];
+  if(fontSelTitle) fontSelTitle.value=p.title;
+  if(fontSelSubtitle) fontSelSubtitle.value=p.subtitle;
+  if(fontSelBody) fontSelBody.value=p.body;
+  if(fontSelCta) fontSelCta.value=p.cta;
+  updateFontPreview();
+}
+
+if(fontPresetSelect) fontPresetSelect.addEventListener('change', function(){
+  applyFontPreset(fontPresetSelect.value);
+  render();
+});
+if(fontAdvancedCheck) fontAdvancedCheck.addEventListener('change', function(){
+  if(fontAdvancedPanel) fontAdvancedPanel.style.display=fontAdvancedCheck.checked?'':'none';
+});
+[fontSelTitle,fontSelSubtitle,fontSelBody,fontSelCta].forEach(function(sel){
+  if(!sel) return;
+  sel.addEventListener('change', function(){
+    if(window.setFontCustom) window.setFontCustom(
+      fontSelTitle?fontSelTitle.value:null,
+      fontSelSubtitle?fontSelSubtitle.value:null,
+      fontSelBody?fontSelBody.value:null,
+      fontSelCta?fontSelCta.value:null
+    );
+    project.fontPreset='custom';
+    updateFontPreview();
+    render();
+  });
+});
+
+applyFontPreset(project.fontPreset || 'editorial-bambuky');
+
 // Font scale +/- controls
 document.querySelectorAll('.font-scale .fs-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -604,6 +668,7 @@ function mapTemplateKey(key){
 function applyImportedContent(parsed, mode){
   // mode: 'replace' | 'texts' | 'apply'
   if(parsed.projectName) project.name = parsed.projectName;
+  if(parsed.fontPreset && window.FONT_PRESETS && window.FONT_PRESETS[parsed.fontPreset]) applyFontPreset(parsed.fontPreset);
   if(parsed.caption) project.caption = parsed.caption;
   if(parsed.hashtags) project.hashtags = parsed.hashtags;
 

@@ -51,6 +51,16 @@ html,body,#app{height:100%;margin:0;font-family:'Manrope', Arial, sans-serif;col
 .tcm-label{font-size:10px;font-weight:600;color:var(--text-muted);pointer-events:none}
 .tcm-btn.active .tcm-label{color:var(--sage-3)}
 
+/* ===== Selector tipográfico ===== */
+.font-preview{margin-top:8px;padding:10px 12px;border-radius:8px;background:rgba(91,115,107,0.04);border:1px solid rgba(91,115,107,0.08)}
+.font-preview .fp-title{font-size:22px;font-weight:300;line-height:1.3;color:var(--text-main)}
+.font-preview .fp-sub{font-size:14px;font-weight:300;font-style:italic;color:var(--text-muted);margin-top:2px}
+.font-preview .fp-ui{font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--sage-2);margin-top:6px}
+.font-advanced{margin-top:8px;padding:10px;border-radius:8px;background:rgba(91,115,107,0.03);border:1px solid rgba(91,115,107,0.06)}
+.font-advanced label{margin-top:8px}
+.font-advanced label:first-child{margin-top:0}
+.font-sel{width:100%;padding:7px 10px;border:1px solid rgba(91,115,107,0.12);border-radius:8px;background:transparent;font-size:12px}
+
 /* ===== Toggle experimentales ===== */
 .legacy-toggle,.logo-toggle{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;line-height:1;color:var(--text-muted);cursor:pointer;user-select:none}
 .legacy-toggle input,.logo-toggle input{accent-color:var(--sage-2);margin:0;width:14px;height:14px;flex-shrink:0}
