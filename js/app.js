@@ -484,10 +484,32 @@ function applyImportedContent(parsed, mode){
   if(incoming.length===0 && mode==='replace') project.slides = [];
   else project.slides = newSlides.length? newSlides : project.slides;
   project.current = 0;
-  refreshSlidesList(); loadSlideToUI(); render();
+  refreshSlidesList(); loadSlideToUI(); render(); updateCaptionUI();
 }
 
 function showImportMessage(msg, isError=true){ importMessage.textContent = msg; importMessage.style.color = isError ? '#8B0000' : '#2E7D32'; }
+
+/* ===== Copiar caption para Instagram ===== */
+const captionRow = document.getElementById('captionRow');
+const copyCaption = document.getElementById('copyCaption');
+const captionMessage = document.getElementById('captionMessage');
+
+// Muestra el botón solo si hay caption disponible.
+function updateCaptionUI(){
+  if(!captionRow) return;
+  captionRow.style.display = (project.caption && project.caption.trim()) ? '' : 'none';
+}
+
+if(copyCaption) copyCaption.addEventListener('click', async ()=>{
+  let text = (project.caption || '').trim();
+  if(project.hashtags && project.hashtags.trim()) text += '\n\n' + project.hashtags.trim();
+  if(!text){ if(captionMessage) captionMessage.textContent = 'No hay caption todavía. Importa el JSON de Claude primero.'; return; }
+  const ok = await copyToClipboard(text);
+  if(captionMessage){
+    captionMessage.textContent = ok ? 'Caption copiado (con hashtags)' : 'No se pudo copiar (copia manual)';
+    setTimeout(()=>{ captionMessage.textContent = ''; }, 2600);
+  }
+});
 
 /* ===== IA asistida: copiar prompts (sin APIs externas) ===== */
 const promptTopic = document.getElementById('promptTopic');
@@ -704,7 +726,7 @@ if(igNext) igNext.addEventListener('click', ()=> igGo(1));
 // Inicialización (al final: ya están declarados los elementos del mockup que
 // usa syncIGPreview, llamado desde render()).
 if(projectNameInput) projectNameInput.value = project.name || '';
-refreshSlidesList(); loadSlideToUI(); render();
+refreshSlidesList(); loadSlideToUI(); render(); updateCaptionUI();
 
 // Re-render once the editorial fonts have loaded (Cormorant / DM Sans),
 // so the canvas uses the real typefaces instead of the serif/sans fallback.
