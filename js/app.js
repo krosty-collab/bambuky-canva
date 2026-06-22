@@ -157,17 +157,35 @@ function loadDemo(){
     {template:'Objeción', eyebrow:'La pregunta más frecuente', title:'¿Y si mi bebé llega en fecha diferente?', body:'No pasa nada. La fecha exacta la confirmamos cuando nace. Siempre nos adaptamos.'},
 
     // 6 · Autoridad
-    {template:'Autoridad', variant:'filosofia', mode:'heritage-blue', eyebrow:'', title:'Ninguna fotografía vale más que la seguridad de un bebé.', creds:['Más de 10 años especializados','Más de 830 recién nacidos fotografiados','Protocolo de seguridad neonatal en cada sesión','Gemelos, prematuros y partos especiales'], subtitle:'Aquí siempre gana el bebé.'},
+    {template:'Autoridad', eyebrow:'', title:'Ninguna fotografía vale más que la seguridad de un bebé.', creds:['Más de 10 años especializados','Más de 830 recién nacidos fotografiados','Protocolo de seguridad neonatal en cada sesión','Gemelos, prematuros y partos especiales'], subtitle:'Aquí siempre gana el bebé.'},
 
     // 7 · CTA
-    {template:'CTA', variant:'reserva', mode:'heritage-blue', eyebrow:'Querétaro · México', title:'¿Cuándo llega tu bebé?', subtitle:'Cuéntanos tu fecha aproximada. Con gusto te orientamos, sin compromiso.', cta:'Escríbenos por DM'}
+    {template:'CTA', eyebrow:'Querétaro · México', title:'¿Cuándo llega tu bebé?', subtitle:'Cuéntanos tu fecha aproximada. Con gusto te orientamos, sin compromiso.', cta:'Escríbenos por DM'}
   ];
   project.slides = demo.map(d=>Object.assign(createSlide(d.template), d));
   project.caption = 'Cuando nace un bebé, hay una etapa muy corta que suele pasar demasiado rápido.\n\nEntre el día 5 y el día 15 de vida, los recién nacidos duermen de una manera diferente. Sus reflejos todavía los llevan a posiciones que muy pronto dejarán de poder hacer. Y su cuerpo aún recuerda el espacio donde vivió los últimos nueve meses.\n\nEsa es la etapa ideal para una sesión newborn.\n\nEn Bambuky hemos fotografiado más de 830 recién nacidos en Querétaro en más de 10 años. Y lo que aprendimos es que cuando las familias reservan con tiempo, la sesión ocurre con mucha más tranquilidad para todos.\n\n¿Cómo funciona? Apartas tu lugar durante el embarazo. Cuando nace tu bebé, coordinamos juntos la fecha exacta. Nos adaptamos a lo que necesite tu familia.\n\nSi tienes dudas o quieres saber si hay lugar disponible para tu fecha, escríbenos por DM. Con gusto te orientamos. 🍃';
   project.hashtags = '#fotografianewborn #newbornqueretaro #sesionnewborn #fotografíanewbornquerétaro #estudionewbornqueretaro #bambuky #fotografoqueretaro #bebereciennacido #maternidadqueretaro #embarazoqueretaro #fotografiadenacimiento #newbornphotography #primeroshijos #queretaromx #bebequeretaro';
 }
 
+// Normaliza el estado del carrusel: fuerza el tema global en todas las slides
+// y asegura que cada slide tenga un variant válido (familia, no legacy).
+function normalizeProject(){
+  var theme = project.globalTheme || 'sage-garden';
+  project.globalTheme = theme;
+  project.slides.forEach(function(s){
+    s.mode = theme;
+    if(window.normalizeVariant){
+      var list = (window.VARIANTS && window.VARIANTS[s.template]) || [];
+      var current = list.find(function(v){ return v.id === s.variant; });
+      if(!current || current.hidden || current.legacy){
+        s.variant = window.defaultVariant(s.template);
+      }
+    }
+  });
+}
+
 loadDemo();
+normalizeProject();
 
 function refreshSlidesList(){
   slidesList.innerHTML='';
@@ -633,12 +651,11 @@ function applyImportedContent(parsed, mode){
   // if incoming is empty but mode is replace, clear slides
   if(incoming.length===0 && mode==='replace') project.slides = [];
   else project.slides = newSlides.length? newSlides : project.slides;
-  // Derive global theme from first slide's mode
+  // Derive global theme from first slide and normalize all slides
   if(project.slides.length){
-    const firstMode = project.slides[0].mode || 'sage-garden';
-    project.globalTheme = firstMode;
-    project.slides.forEach(s=>{ s.mode = firstMode; });
+    project.globalTheme = project.slides[0].mode || 'sage-garden';
   }
+  normalizeProject();
   setActiveGlobalTheme(project.globalTheme);
   project.current = 0;
   refreshSlidesList(); loadSlideToUI(); render(); updateCaptionUI();
