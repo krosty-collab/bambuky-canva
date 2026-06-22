@@ -455,69 +455,10 @@ const TEMPLATES_V = {
     var ts=titleSize(state.title);
 
     if(v==='cover'){
-      /* ----------------------------------------------------------------
-         EDITORIAL COVER — pensada como portada de revista premium.
-         Foto protagonista (overlays mínimos), masthead "BAMBUKY",
-         dateline con filetes, marco interior fino, titular anclado abajo.
-         ---------------------------------------------------------------- */
-      var photo=hasPhoto(state);
-      var c;
-      if(photo){
-        fullPhoto(ctx,state.image);
-        // tinte unificador casi imperceptible (cohesión de temperatura)
-        ctx.fillStyle='rgba('+t.overlayRgb+',0.10)'; ctx.fillRect(0,0,W,H);
-        // velo superior suave: solo lo justo para sostener el masthead
-        var gT=ctx.createLinearGradient(0,0,0,H*0.30);
-        gT.addColorStop(0,'rgba('+t.overlayRgb+',0.52)');
-        gT.addColorStop(0.6,'rgba('+t.overlayRgb+',0.12)');
-        gT.addColorStop(1,'rgba('+t.overlayRgb+',0)');
-        ctx.fillStyle=gT; ctx.fillRect(0,0,W,H*0.30);
-        // velo inferior suave: ancla el titular sin tapar a la foto
-        var gB=ctx.createLinearGradient(0,H*0.48,0,H);
-        gB.addColorStop(0,'rgba('+t.overlayRgb+',0)');
-        gB.addColorStop(0.6,'rgba('+t.overlayRgb+',0.18)');
-        gB.addColorStop(1,'rgba('+t.overlayRgb+',0.60)');
-        ctx.fillStyle=gB; ctx.fillRect(0,H*0.42,W,H*0.58);
-        c=txtPhoto(t);
-      } else {
-        gradientBg(ctx,t);
-        c=txtSolid(t);
-      }
-      c=textColors(c,t,state);
-
-      // marco interior fino (gesto editorial clásico)
-      var fm=50;
-      ctx.save();
-      ctx.globalAlpha=0.30; ctx.strokeStyle=c.h; ctx.lineWidth=1.5;
-      ctx.strokeRect(fm,fm,W-fm*2,H-fm*2);
-      ctx.restore();
-
-      // masthead — la cabecera, centrada arriba
-      ctx.save();
-      ctx.font='400 60px '+FONT_TITLE;
-      if('letterSpacing' in ctx) ctx.letterSpacing='12px';
-      ctx.fillStyle=c.h; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-      ctx.fillText('BAMBUKY', W/2+6, 154);   // +6 compensa el espaciado final
-      ctx.restore();
-
-      // dateline + filetes flanqueantes
-      var dl=(state.eyebrow||'Fotografía Newborn · Querétaro').toUpperCase();
-      ctx.save();
-      ctx.font='500 14px '+FONT_BODY;
-      if('letterSpacing' in ctx) ctx.letterSpacing='5px';
-      ctx.fillStyle=c.h; ctx.globalAlpha=0.88; ctx.textAlign='center';
-      ctx.fillText(dl, W/2, 198);
-      var dlW=ctx.measureText(dl).width;
-      ctx.restore();
-      ctx.save(); ctx.globalAlpha=0.5; ctx.fillStyle=c.h;
-      var lY=192, gp=26, rw=40;
-      if(W/2-dlW/2-gp-rw>fm+20){
-        ctx.fillRect(W/2-dlW/2-gp-rw,lY,rw,1.5);
-        ctx.fillRect(W/2+dlW/2+gp,lY,rw,1.5);
-      }
-      ctx.restore();
-
-      // titular — bloque elevado (~10% del alto) con kicker de acento y aire
+      /* EDITORIAL COVER — usa el chrome compartido (fCoverChrome)
+         para que el masthead, marco, dateline y toggle de logo sean
+         idénticos a los de las slides interiores de la misma familia. */
+      var c=fCoverChrome(ctx,state,t,0.60);
       var yTitle=876;
       fineRule(ctx,SX,yTitle-66,54,t.accent);
       ctx.font='300 '+ts.fs+'px '+FONT_TITLE;
