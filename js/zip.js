@@ -1,4 +1,4 @@
-// Minimal ZIP writer (store method - no compression)
+// Minimal ZIP writer (store method, no compression)
 // files: [{name: 'slide-01.jpg', data: Uint8Array}]
 function crc32(buf){
   let table = crc32.table;
@@ -11,7 +11,15 @@ function crc32(buf){
 function writeUint32LE(arr, offset, value){ arr[offset]=value&0xFF; arr[offset+1]=(value>>>8)&0xFF; arr[offset+2]=(value>>>16)&0xFF; arr[offset+3]=(value>>>24)&0xFF; }
 function writeUint16LE(arr, offset, value){ arr[offset]=value&0xFF; arr[offset+1]=(value>>>8)&0xFF; }
 
+function dosDateTime(){
+  const d = new Date();
+  const time = (d.getSeconds()>>1) | (d.getMinutes()<<5) | (d.getHours()<<11);
+  const date = d.getDate() | ((d.getMonth()+1)<<5) | ((d.getFullYear()-1980)<<9);
+  return {time, date};
+}
+
 function makeZip(files){
+  const {time: modTime, date: modDate} = dosDateTime();
   const fileEntries = [];
   let localSize = 0;
   for(const f of files){
@@ -20,69 +28,70 @@ function makeZip(files){
     const crc = crc32(data);
     const compressedSize = data.length;
     const uncompressedSize = data.length;
+    // Local file header: 30 bytes fixed + file name
     const localHeader = new Uint8Array(30 + nameBuf.length);
-    // local file header signature
-    writeUint32LE(localHeader,0,0x04034b50);
-    writeUint16LE(localHeader,4,20); // version
-    writeUint16LE(localHeader,6,0); // flags
-    writeUint16LE(localHeader,8,0); // method 0 = store
-    writeUint16LE(localHeader,10,0); // mod time
-    writeUint16LE(localHeader,12,0); // mod date
-    writeUint32LE(localHeader,14,crc);
-    writeUint32LE(localHeader,18,compressedSize);
-    writeUint32LE(localHeader,22,uncompressedSize);
-    writeUint16LE(localHeader,26,nameBuf.length);
-    writeUint16LE(localHeader,28,0);
-    localHeader.set(nameBuf,30);
+    writeUint32LE(localHeader, 0, 0x04034b50);  // signature
+    writeUint16LE(localHeader, 4, 20);           // version needed (2.0)
+    writeUint16LE(localHeader, 6, 0);            // general purpose bit flag
+    writeUint16LE(localHeader, 8, 0);            // compression method (store)
+    writeUint16LE(localHeader, 10, modTime);     // last mod file time
+    writeUint16LE(localHeader, 12, modDate);     // last mod file date
+    writeUint32LE(localHeader, 14, crc);         // crc-32
+    writeUint32LE(localHeader, 18, compressedSize);
+    writeUint32LE(localHeader, 22, uncompressedSize);
+    writeUint16LE(localHeader, 26, nameBuf.length); // file name length
+    writeUint16LE(localHeader, 28, 0);              // extra field length
+    localHeader.set(nameBuf, 30);
 
     const localTotal = localHeader.length + data.length;
     fileEntries.push({nameBuf, localHeader, data, crc, compressedSize, uncompressedSize, localOffset: localSize});
     localSize += localTotal;
   }
 
-  // central directory
+  // Central directory
   let centralSize = 0;
   for(const e of fileEntries){ centralSize += 46 + e.nameBuf.length; }
 
   const zipSize = localSize + centralSize + 22;
   const out = new Uint8Array(zipSize);
   let ptr = 0;
-  // write local files
   for(const e of fileEntries){ out.set(e.localHeader, ptr); ptr += e.localHeader.length; out.set(e.data, ptr); ptr += e.data.length; }
   const centralStart = ptr;
   for(const e of fileEntries){
     const nameLen = e.nameBuf.length;
+    // Central directory file header: 46 bytes fixed + file name
     const cent = new Uint8Array(46 + nameLen);
-    writeUint32LE(cent,0,0x02014b50);
-    writeUint16LE(cent,4,0); // version made by
-    writeUint16LE(cent,6,20); // version needed
-    writeUint16LE(cent,8,0);
-    writeUint16LE(cent,10,0);
-    writeUint16LE(cent,12,0);
-    writeUint32LE(cent,14,e.crc);
-    writeUint32LE(cent,18,e.compressedSize);
-    writeUint32LE(cent,22,e.uncompressedSize);
-    writeUint16LE(cent,26,nameLen);
-    writeUint16LE(cent,28,0);
-    writeUint16LE(cent,30,0);
-    writeUint16LE(cent,32,0);
-    writeUint16LE(cent,34,0);
-    writeUint32LE(cent,36,e.localOffset);
-    cent.set(e.nameBuf,46);
+    writeUint32LE(cent, 0, 0x02014b50);          // signature
+    writeUint16LE(cent, 4, 20);                   // version made by (2.0)
+    writeUint16LE(cent, 6, 20);                   // version needed (2.0)
+    writeUint16LE(cent, 8, 0);                    // general purpose bit flag
+    writeUint16LE(cent, 10, 0);                   // compression method (store)
+    writeUint16LE(cent, 12, modTime);             // last mod file time
+    writeUint16LE(cent, 14, modDate);             // last mod file date
+    writeUint32LE(cent, 16, e.crc);               // crc-32
+    writeUint32LE(cent, 20, e.compressedSize);    // compressed size
+    writeUint32LE(cent, 24, e.uncompressedSize);  // uncompressed size
+    writeUint16LE(cent, 28, nameLen);             // file name length
+    writeUint16LE(cent, 30, 0);                   // extra field length
+    writeUint16LE(cent, 32, 0);                   // file comment length
+    writeUint16LE(cent, 34, 0);                   // disk number start
+    writeUint16LE(cent, 36, 0);                   // internal file attributes
+    writeUint32LE(cent, 38, 0);                   // external file attributes
+    writeUint32LE(cent, 42, e.localOffset);       // relative offset of local header
+    cent.set(e.nameBuf, 46);
     out.set(cent, ptr); ptr += cent.length;
   }
-  const centralEnd = ptr;
-  // end of central dir
+  // End of central directory record
   const eocd = new Uint8Array(22);
-  writeUint32LE(eocd,0,0x06054b50);
-  writeUint16LE(eocd,4,0);
-  writeUint16LE(eocd,6,0);
-  writeUint16LE(eocd,8,fileEntries.length);
-  writeUint16LE(eocd,10,fileEntries.length);
-  writeUint32LE(eocd,12,centralSize);
-  writeUint32LE(eocd,16,centralStart);
-  writeUint16LE(eocd,20,0);
-  out.set(eocd, ptr); ptr += eocd.length;
+  writeUint32LE(eocd, 0, 0x06054b50);            // signature
+  writeUint16LE(eocd, 4, 0);                     // disk number
+  writeUint16LE(eocd, 6, 0);                     // disk with central dir
+  writeUint16LE(eocd, 8, fileEntries.length);    // entries on this disk
+  writeUint16LE(eocd, 10, fileEntries.length);   // total entries
+  writeUint32LE(eocd, 12, centralSize);          // central dir size
+  writeUint32LE(eocd, 16, centralStart);         // central dir offset
+  writeUint16LE(eocd, 20, 0);                    // comment length
+  out.set(eocd, ptr);
 
   return out;
 }

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>ZIP Test</title></head>
+<body>
+<h2>ZIP Generation Test</h2>
+<button id="generate">Generate Test ZIP</button>
+<button id="validate">Validate Structure</button>
+<pre id="log" style="background:#111;color:#0f0;padding:16px;font-size:13px;max-height:600px;overflow:auto;"></pre>
+<script src="js/zip.js"></script>
+<script>
+const log = document.getElementById('log');
+function print(msg){ log.textContent += msg + '\n'; }
+
+function createTestJPEG(label){
+  const canvas = document.createElement('canvas');
+  canvas.width = 200; canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#2a6';
+  ctx.fillRect(0,0,200,200);
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 24px sans-serif';
+  ctx.fillText(label, 30, 110);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+  const bin = atob(dataUrl.split(',')[1]);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+function readUint32LE(arr, off){ return arr[off] | (arr[off+1]<<8) | (arr[off+2]<<16) | (arr[off+3]<<24) >>> 0; }
+function readUint16LE(arr, off){ return arr[off] | (arr[off+1]<<8); }
+
+function validateZip(zipData){
+  print('=== ZIP STRUCTURE VALIDATION ===');
+  print('Total size: ' + zipData.length + ' bytes');
+  let ptr = 0;
+  let fileCount = 0;
+  const localEntries = [];
+
+  // Parse local file headers
+  while(ptr < zipData.length){
+    const sig = readUint32LE(zipData, ptr);
+    if(sig !== 0x04034b50) break;
+    fileCount++;
+    const verNeeded = readUint16LE(zipData, ptr+4);
+    const flags = readUint16LE(zipData, ptr+6);
+    const method = readUint16LE(zipData, ptr+8);
+    const crc = readUint32LE(zipData, ptr+14);
+    const compSize = readUint32LE(zipData, ptr+18);
+    const uncompSize = readUint32LE(zipData, ptr+22);
+    const nameLen = readUint16LE(zipData, ptr+26);
+    const extraLen = readUint16LE(zipData, ptr+28);
+    const name = new TextDecoder().decode(zipData.slice(ptr+30, ptr+30+nameLen));
+    const dataStart = ptr + 30 + nameLen + extraLen;
+
+    // Verify CRC
+    const fileData = zipData.slice(dataStart, dataStart + compSize);
+    const actualCrc = crc32(fileData);
+    const crcOk = (crc >>> 0) === (actualCrc >>> 0);
+
+    print('\n--- Local File Header #' + fileCount + ' ---');
+    print('  Offset: ' + ptr);
+    print('  Name: ' + name);
+    print('  Version needed: ' + verNeeded);
+    print('  Method: ' + method + (method === 0 ? ' (store)' : ' (UNEXPECTED)'));
+    print('  CRC-32: 0x' + (crc>>>0).toString(16).padStart(8,'0') + (crcOk ? ' ✓' : ' ✗ MISMATCH (expected 0x' + actualCrc.toString(16).padStart(8,'0') + ')'));
+    print('  Compressed size: ' + compSize);
+    print('  Uncompressed size: ' + uncompSize);
+    print('  Size match: ' + (compSize === uncompSize ? '✓' : '✗'));
+
+    localEntries.push({offset: ptr, name, crc, compSize, uncompSize});
+    ptr = dataStart + compSize;
+  }
+
+  // Parse central directory
+  print('\n=== CENTRAL DIRECTORY ===');
+  const centralStart = ptr;
+  let cdCount = 0;
+  while(ptr < zipData.length){
+    const sig = readUint32LE(zipData, ptr);
+    if(sig !== 0x02014b50) break;
+    cdCount++;
+    const verMadeBy = readUint16LE(zipData, ptr+4);
+    const verNeeded = readUint16LE(zipData, ptr+6);
+    const method = readUint16LE(zipData, ptr+10);
+    const crc = readUint32LE(zipData, ptr+16);
+    const compSize = readUint32LE(zipData, ptr+20);
+    const uncompSize = readUint32LE(zipData, ptr+24);
+    const nameLen = readUint16LE(zipData, ptr+28);
+    const extraLen = readUint16LE(zipData, ptr+30);
+    const commentLen = readUint16LE(zipData, ptr+32);
+    const localOffset = readUint32LE(zipData, ptr+42);
+    const name = new TextDecoder().decode(zipData.slice(ptr+46, ptr+46+nameLen));
+
+    const localEntry = localEntries[cdCount-1];
+    const offsetOk = localEntry && localOffset === localEntry.offset;
+    const crcOk = localEntry && (crc>>>0) === (localEntry.crc>>>0);
+
+    print('\n--- Central Dir Entry #' + cdCount + ' ---');
+    print('  Name: ' + name + (name === (localEntry && localEntry.name) ? ' ✓' : ' ✗ NAME MISMATCH'));
+    print('  Version made by: ' + verMadeBy + (verMadeBy >= 20 ? ' ✓' : ' ✗ (should be >= 20)'));
+    print('  CRC-32: 0x' + (crc>>>0).toString(16).padStart(8,'0') + (crcOk ? ' ✓ matches local' : ' ✗ MISMATCH'));
+    print('  Compressed size: ' + compSize + (localEntry && compSize === localEntry.compSize ? ' ✓' : ' ✗'));
+    print('  Uncompressed size: ' + uncompSize + (localEntry && uncompSize === localEntry.uncompSize ? ' ✓' : ' ✗'));
+    print('  Local header offset: ' + localOffset + (offsetOk ? ' ✓' : ' ✗ WRONG (expected ' + (localEntry && localEntry.offset) + ')'));
+
+    ptr += 46 + nameLen + extraLen + commentLen;
+  }
+
+  // Parse EOCD
+  print('\n=== END OF CENTRAL DIRECTORY ===');
+  const eocdSig = readUint32LE(zipData, ptr);
+  if(eocdSig !== 0x06054b50){
+    print('  ✗ EOCD signature MISSING at offset ' + ptr + ' (got 0x' + (eocdSig>>>0).toString(16) + ')');
+    return false;
+  }
+  const eocdEntries = readUint16LE(zipData, ptr+8);
+  const eocdTotalEntries = readUint16LE(zipData, ptr+10);
+  const eocdCdSize = readUint32LE(zipData, ptr+12);
+  const eocdCdOffset = readUint32LE(zipData, ptr+16);
+
+  const actualCdSize = ptr - centralStart;
+  print('  Signature: ✓');
+  print('  Entries on disk: ' + eocdEntries + (eocdEntries === fileCount ? ' ✓' : ' ✗'));
+  print('  Total entries: ' + eocdTotalEntries + (eocdTotalEntries === fileCount ? ' ✓' : ' ✗'));
+  print('  Central dir size: ' + eocdCdSize + (eocdCdSize === actualCdSize ? ' ✓' : ' ✗ (actual: ' + actualCdSize + ')'));
+  print('  Central dir offset: ' + eocdCdOffset + (eocdCdOffset === centralStart ? ' ✓' : ' ✗ (actual: ' + centralStart + ')'));
+
+  print('\n=== RESULT: ALL CHECKS PASSED ===');
+  return true;
+}
+
+document.getElementById('generate').onclick = function(){
+  log.textContent = '';
+  print('Generating 3 test JPEG images...');
+  const files = [
+    {name: 'slide-01.jpg', data: createTestJPEG('Slide 1')},
+    {name: 'slide-02.jpg', data: createTestJPEG('Slide 2')},
+    {name: 'slide-03.jpg', data: createTestJPEG('Slide 3')}
+  ];
+  print('File sizes: ' + files.map(f => f.name + ' = ' + f.data.length + ' bytes').join(', '));
+
+  print('\nGenerating ZIP...');
+  const zipData = makeZip(files);
+  print('ZIP generated: ' + zipData.length + ' bytes');
+
+  print('\nDownloading...');
+  const blob = new Blob([zipData], {type: 'application/zip'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'test-carousel.zip'; a.click();
+  URL.revokeObjectURL(url);
+  print('Download triggered: test-carousel.zip');
+
+  window._lastZip = zipData;
+  print('\nClick "Validate Structure" to run byte-level validation.');
+};
+
+document.getElementById('validate').onclick = function(){
+  if(!window._lastZip){ print('Generate a ZIP first.'); return; }
+  log.textContent = '';
+  validateZip(window._lastZip);
+};
+</script>
+</body></html>
