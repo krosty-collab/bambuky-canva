@@ -162,6 +162,20 @@ function drawWrapped(ctx, text, x, y, maxW, lh, maxLines, align){
   return ty;
 }
 
+/* Pequeño marcador en forma de diamante (viñeta de credenciales) */
+function diamond(ctx, cx, cy, r, color){
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r);
+  ctx.lineTo(cx + r, cy);
+  ctx.lineTo(cx, cy + r);
+  ctx.lineTo(cx - r, cy);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
 function roundRect(ctx, x, y, width, height, radius, fill, stroke){
   if(typeof stroke === 'undefined') stroke = true;
   if(typeof radius === 'undefined') radius = 5;
@@ -333,21 +347,23 @@ const TEMPLATES = {
     });
   },
 
-  /* 6 · AUTORIDAD — título + credenciales en líneas con separadores finos. */
+  /* 6 · AUTORIDAD — fondo oscuro, encabezado serif cálido, credenciales con
+     viñeta de diamante y cierre en itálica. El "salto visual" de la serie. */
   'Autoridad': function(ctx, state){
     frame(ctx, (ctx) => {
       const hasImg = photoFull(ctx, state.image, 'full');
-      if(!hasImg) bgCream(ctx, false);
-      const c = roles(hasImg);
+      if(!hasImg) bgCharcoal(ctx);          // siempre oscuro
+      const c = roles(true);
+      const gold = '#C8B89A';               // acento cálido (arena)
 
-      logo(ctx, c.logo);
+      logo(ctx, gold);
 
-      const top = hasImg ? 470 : 300;
-      eyebrow(ctx, state.eyebrow || 'Autoridad', MX, top, c.eyebrow);
+      let top = hasImg ? 420 : 380;
+      if(state.eyebrow){ eyebrow(ctx, state.eyebrow, MX, top, c.eyebrow); top += 56; }
 
-      ctx.fillStyle = c.title;
+      ctx.fillStyle = gold;
       ctx.font = '400 40px "Cormorant Garamond", Georgia, serif';
-      const end = drawWrapped(ctx, state.title || 'Más de 830 recién nacidos.', MX, top + 72, W - MX * 2, 48, 3);
+      const end = drawWrapped(ctx, state.title || 'Bambuky · Estudio Newborn · Querétaro', MX, top, W - MX * 2, 48, 2);
 
       // credenciales: array creds o body separado por saltos / "·"
       let lines = [];
@@ -355,19 +371,19 @@ const TEMPLATES = {
       else if(state.body) lines = state.body.split(/\n|·|•/).map(s => s.trim()).filter(Boolean);
       lines = lines.slice(0, 4);
 
-      let ly = end + 64;
-      ctx.font = '300 18px "DM Sans", system-ui, sans-serif';
+      let ly = end + 70;
+      ctx.font = '300 19px "DM Sans", system-ui, sans-serif';
       for(let i = 0; i < lines.length; i++){
-        ctx.fillStyle = c.rule; ctx.fillRect(MX, ly - 18, 20, 1.5);
+        diamond(ctx, MX + 6, ly - 7, 6, 'rgba(200,184,154,0.75)');
         ctx.fillStyle = c.body; ctx.textAlign = 'left';
-        drawWrapped(ctx, lines[i], MX + 34, ly, W - MX * 2 - 34, 26, 2);
-        ly += 64;
+        const lend = drawWrapped(ctx, lines[i], MX + 30, ly, W - MX * 2 - 30, 27, 2);
+        ly = lend + 34;
       }
 
       if(state.subtitle){
-        ctx.fillStyle = c.body;
+        ctx.fillStyle = '#9DB3AB';
         ctx.font = 'italic 300 24px "Cormorant Garamond", Georgia, serif';
-        drawWrapped(ctx, state.subtitle, MX, Math.max(ly + 8, H - 220), W - MX * 2 - 40, 32, 2);
+        drawWrapped(ctx, state.subtitle, MX, Math.max(ly + 22, H - 320), W - MX * 2 - 40, 32, 2);
       }
       pageNum(ctx, state, c.page);
     });

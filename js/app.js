@@ -20,8 +20,50 @@ const fieldSubtitle = document.getElementById('fieldSubtitle');
 const fieldNumber = document.getElementById('fieldNumber');
 const fieldCreds = document.getElementById('fieldCreds');
 const fieldBody = document.getElementById('fieldBody');
+const fieldCta = document.getElementById('fieldCta');
 
 const imgUpload = document.getElementById('imgUpload');
+const imgFileRow = document.getElementById('imgFileRow');
+const imgFileName = document.getElementById('imgFileName');
+const imgRemove = document.getElementById('imgRemove');
+const variantSelect = document.getElementById('variantSelect');
+const modeSelect = document.getElementById('modeSelect');
+const modeSuggestion = document.getElementById('modeSuggestion');
+
+// Rellena los selects de variante y modo según la plantilla activa.
+function populateVariantOptions(tpl, current){
+  if(!variantSelect) return;
+  const list = (window.VARIANTS && window.VARIANTS[tpl]) || [];
+  variantSelect.innerHTML = '';
+  list.forEach(v=>{ const o = document.createElement('option'); o.value = v.id; o.textContent = v.label; variantSelect.appendChild(o); });
+  variantSelect.value = window.normalizeVariant ? window.normalizeVariant(tpl, current) : (list[0] && list[0].id);
+}
+function populateModeOptions(tpl, current){
+  if(!modeSelect) return;
+  const list = (window.MODES && window.MODES[tpl]) || ['light'];
+  const labels = window.MODE_LABELS || {};
+  modeSelect.innerHTML = '';
+  list.forEach(m=>{ const o = document.createElement('option'); o.value = m; o.textContent = labels[m] || m; modeSelect.appendChild(o); });
+  modeSelect.value = window.normalizeMode ? window.normalizeMode(tpl, current) : list[0];
+}
+
+// Campos que usa cada plantilla (para mostrar solo lo relevante en "Contenido").
+const TEMPLATE_FIELDS = {
+  'Portada':            ['eyebrow','title','subtitle'],
+  'Problema':           ['eyebrow','title','body'],
+  'Urgencia biológica': ['eyebrow','number','subtitle','body'],
+  'Solución':           ['eyebrow','title','body'],
+  'Objeción':           ['eyebrow','title','body'],
+  'Autoridad':          ['eyebrow','title','creds','subtitle'],
+  'CTA':                ['eyebrow','title','subtitle','cta']
+};
+function updateFieldVisibility(tplKey){
+  const fields = TEMPLATE_FIELDS[tplKey] || ['eyebrow','title','subtitle','number','creds','body','cta'];
+  ['eyebrow','title','subtitle','number','creds','body','cta'].forEach(f=>{
+    const grp = document.getElementById('grp-' + f);
+    if(grp) grp.style.display = fields.includes(f) ? '' : 'none';
+  });
+}
 
 const exportSlideBtn = document.getElementById('exportSlide');
 const exportCarouselBtn = document.getElementById('exportCarousel');
@@ -30,10 +72,9 @@ let project = {
   name: 'Los primeros días', slides: [], current: 0
 };
 
-// Vista activa del preview ('clean' | 'ig'). Debe declararse ANTES de la
-// primera llamada a render(), porque render() la lee en su hook final;
-// con `let` el acceso anticipado lanzaría ReferenceError (TDZ).
-let currentView = 'clean';
+// Vista única: mockup de Instagram. Debe declararse ANTES de la primera
+// llamada a render(), porque render() la lee en su hook final.
+let currentView = 'ig';
 
 // initial templates in select
 Object.keys(window.TEMPLATES).forEach(key => {
@@ -42,8 +83,11 @@ Object.keys(window.TEMPLATES).forEach(key => {
 
 // create a slide object with defaults
 function createSlide(templateKey){
+  const tpl = templateKey || Object.keys(window.TEMPLATES)[0];
   return {
-    template: templateKey || Object.keys(window.TEMPLATES)[0],
+    template: tpl,
+    variant: window.defaultVariant ? window.defaultVariant(tpl) : '',
+    mode: window.defaultMode ? window.defaultMode(tpl) : 'light',
     eyebrow: '', title: '', subtitle: '', body: '', number: '', handle:'', cta:'',
     steps: [], creds: [], philosophy:'',
       image: null
@@ -70,10 +114,10 @@ function loadDemo(){
     {template:'Objeción', eyebrow:'La pregunta más frecuente', title:'¿Y si mi bebé llega en fecha diferente?', body:'No pasa nada. La fecha exacta la confirmamos cuando nace. Siempre nos adaptamos.'},
 
     // 6 · Autoridad
-    {template:'Autoridad', eyebrow:'Bambuky · Estudio Newborn · Querétaro', title:'Aquí siempre gana el bebé.', creds:['Más de 10 años especializados','Seguridad neonatal en cada sesión','Gemelos, prematuros y situaciones especiales'], subtitle:'La fotografía es la consecuencia de una buena experiencia.'},
+    {template:'Autoridad', variant:'experiencia', mode:'dark', eyebrow:'', title:'Bambuky · Estudio Newborn · Querétaro', creds:['Más de 10 años especializados','Más de 830 recién nacidos fotografiados','Protocolo de seguridad neonatal en cada sesión','Gemelos, prematuros y partos especiales'], subtitle:'Aquí siempre gana el bebé.'},
 
     // 7 · CTA
-    {template:'CTA', eyebrow:'Querétaro · México', title:'¿Cuándo llega tu bebé?', subtitle:'Cuéntanos tu fecha aproximada. Con gusto te orientamos, sin compromiso.', cta:'Escríbenos por DM'}
+    {template:'CTA', variant:'pregunta', mode:'dark', eyebrow:'Querétaro · México', title:'¿Cuándo llega tu bebé?', subtitle:'Cuéntanos tu fecha aproximada. Con gusto te orientamos, sin compromiso.', cta:'Escríbenos por DM'}
   ];
   project.slides = demo.map(d=>Object.assign(createSlide(d.template), d));
   project.caption = 'Cuando nace un bebé, hay una etapa muy corta que suele pasar demasiado rápido.\n\nEntre el día 5 y el día 15 de vida, los recién nacidos duermen de una manera diferente. Sus reflejos todavía los llevan a posiciones que muy pronto dejarán de poder hacer. Y su cuerpo aún recuerda el espacio donde vivió los últimos nueve meses.\n\nEsa es la etapa ideal para una sesión newborn.\n\nEn Bambuky hemos fotografiado más de 830 recién nacidos en Querétaro en más de 10 años. Y lo que aprendimos es que cuando las familias reservan con tiempo, la sesión ocurre con mucha más tranquilidad para todos.\n\n¿Cómo funciona? Apartas tu lugar durante el embarazo. Cuando nace tu bebé, coordinamos juntos la fecha exacta. Nos adaptamos a lo que necesite tu familia.\n\nSi tienes dudas o quieres saber si hay lugar disponible para tu fecha, escríbenos por DM. Con gusto te orientamos. 🍃';
@@ -86,7 +130,7 @@ function refreshSlidesList(){
   slidesList.innerHTML='';
   project.slides.forEach((s,idx)=>{
     const item = document.createElement('div'); item.className='slide-item';
-    const btn = document.createElement('button'); btn.textContent = `Slide ${idx+1}: ${s.template}`; btn.className='slide-btn';
+    const btn = document.createElement('button'); btn.textContent = `${String(idx+1).padStart(2,'0')} · ${s.template}`; btn.className='slide-btn';
     if(idx===project.current) btn.classList.add('active');
     btn.addEventListener('click', ()=>{ project.current=idx; refreshSlidesList(); loadSlideToUI(); render(); });
     const del = document.createElement('button'); del.className='slide-delete'; del.textContent='✕'; del.title='Eliminar slide';
@@ -106,8 +150,26 @@ function loadSlideToUI(){
   fieldNumber.value = s.number||'';
   fieldCreds.value = Array.isArray(s.creds) ? s.creds.join('\n') : (s.creds||'');
   fieldBody.value = s.body||'';
+  fieldCta.value = s.cta||'';
+  populateVariantOptions(s.template, s.variant);
+  populateModeOptions(s.template, s.mode);
+  if(modeSuggestion) modeSuggestion.textContent = '';
+  updateFieldVisibility(s.template);
+  updateImageUI();
   updateWordCounter();
   // image transform controls removed in production mode (fixed composition)
+}
+
+// Refleja en la UI si el slide actual tiene imagen (nombre + botón quitar).
+function updateImageUI(){
+  if(!imgFileRow) return;
+  const img = project.slides[project.current] && project.slides[project.current].image;
+  if(img){
+    imgFileName.textContent = img.name || 'Imagen cargada';
+    imgFileRow.style.display = '';
+  } else {
+    imgFileRow.style.display = 'none';
+  }
 }
 
 // Contador en vivo del presupuesto de 25 palabras por slide.
@@ -115,10 +177,11 @@ const wordCounter = document.getElementById('wordCounter');
 function countWordsUI(t){ return t ? t.trim().split(/\s+/).filter(Boolean).length : 0; }
 function updateWordCounter(){
   if(!wordCounter) return;
-  const n = countWordsUI(fieldEyebrow.value) + countWordsUI(fieldTitle.value)
-          + countWordsUI(fieldSubtitle.value) + countWordsUI(fieldBody.value)
-          + countWordsUI((fieldCreds.value || '').replace(/\n/g, ' '));
-  wordCounter.textContent = n + ' / 25 palabras visibles';
+  const isAutoridad = templateSelect && templateSelect.value === 'Autoridad';
+  let n = countWordsUI(fieldEyebrow.value) + countWordsUI(fieldTitle.value)
+        + countWordsUI(fieldSubtitle.value) + countWordsUI(fieldBody.value);
+  if(!isAutoridad) n += countWordsUI((fieldCreds.value || '').replace(/\n/g, ' '));
+  wordCounter.textContent = n + ' / 25 palabras visibles' + (isAutoridad ? ' (credenciales sin límite)' : '');
   wordCounter.style.color = (n > 25) ? '#8B0000' : 'var(--text-muted)';
 }
 
@@ -131,6 +194,9 @@ function saveUIToSlide(){
   s.number = fieldNumber.value;
   s.creds = fieldCreds.value.split('\n').map(x=>x.trim()).filter(Boolean);
   s.body = fieldBody.value;
+  s.cta = fieldCta.value;
+  if(variantSelect && variantSelect.value) s.variant = variantSelect.value;
+  if(modeSelect && modeSelect.value) s.mode = modeSelect.value;
   // image transform controls removed in production mode (fixed composition)
 }
 
@@ -138,14 +204,84 @@ function saveUIToSlide(){
 imgUpload.addEventListener('change', async (e)=>{
   const file = e.target.files[0]; if(!file) return;
   const img = new Image();
-  img.onload = ()=>{ const obj = {img}; project.slides[project.current].image = obj; render(); };
+  img.onload = ()=>{
+    const obj = {img, name: file.name};
+    project.slides[project.current].image = obj;
+    autoContrast(img);           // sugerir y aplicar modo según la foto
+    updateImageUI(); render();
+  };
   img.src = URL.createObjectURL(file);
 });
 
-// control change events (minimal inputs only)
-[templateSelect, fieldEyebrow, fieldTitle, fieldSubtitle, fieldNumber, fieldCreds, fieldBody, projectNameInput].forEach(el=>{
+// Quitar imagen del slide actual
+if(imgRemove) imgRemove.addEventListener('click', ()=>{
+  project.slides[project.current].image = null;
+  if(imgUpload) imgUpload.value = '';
+  if(modeSuggestion) modeSuggestion.textContent = '';
+  updateImageUI(); render();
+});
+
+// Analiza luminosidad/contraste de la foto y devuelve {avg, sd} (0–255).
+function analyzePhoto(img){
+  try{
+    const c = document.createElement('canvas'); const w = 40, h = 50;
+    c.width = w; c.height = h;
+    const cx = c.getContext('2d'); cx.drawImage(img, 0, 0, w, h);
+    const d = cx.getImageData(0, 0, w, h).data;
+    let sum = 0; const lum = [];
+    for(let i=0;i<d.length;i+=4){ const l = 0.2126*d[i] + 0.7152*d[i+1] + 0.0722*d[i+2]; lum.push(l); sum += l; }
+    const avg = sum / lum.length;
+    let varc = 0; for(const l of lum) varc += (l-avg)*(l-avg);
+    return { avg, sd: Math.sqrt(varc / lum.length) };
+  }catch(e){ return null; }
+}
+
+// Sugiere un modo disponible para la plantilla según la foto.
+function suggestMode(tpl, stats){
+  const avail = (window.MODES && window.MODES[tpl]) || ['light'];
+  let want, reason;
+  if(stats.sd > 68 && avail.includes('overlay')){ want = 'overlay'; reason = 'foto con mucho contraste'; }
+  else if(stats.avg >= 165){ want = 'light'; reason = 'foto clara'; }
+  else if(stats.avg <= 95){ want = 'dark'; reason = 'foto oscura'; }
+  else { want = (stats.avg >= 130) ? 'light' : 'dark'; reason = (stats.avg >= 130) ? 'foto clara' : 'foto oscura'; }
+  if(!avail.includes(want)) want = avail.includes('dark') ? 'dark' : avail[0];
+  return { mode: want, reason };
+}
+
+// Aplica la sugerencia (el usuario puede cambiarla manualmente después).
+function autoContrast(img){
+  const s = project.slides[project.current];
+  const stats = analyzePhoto(img);
+  if(!stats){ if(modeSuggestion) modeSuggestion.textContent = ''; return; }
+  const sug = suggestMode(s.template, stats);
+  s.mode = sug.mode;
+  populateModeOptions(s.template, s.mode);
+  if(modeSuggestion){
+    const label = (window.MODE_LABELS && window.MODE_LABELS[sug.mode]) || sug.mode;
+    modeSuggestion.innerHTML = `Sugerencia automática: <span class="sg-strong">${label}</span> (${sug.reason}). Puedes cambiarla.`;
+  }
+}
+
+// Campos de texto + nombre de proyecto
+[fieldEyebrow, fieldTitle, fieldSubtitle, fieldNumber, fieldCreds, fieldBody, fieldCta, projectNameInput].forEach(el=>{
   el && el.addEventListener('input', ()=>{ saveUIToSlide(); if(el===projectNameInput) project.name = projectNameInput.value; updateWordCounter(); refreshSlidesList(); render(); });
 });
+
+// Cambio de plantilla: resetea variante y modo a los de la nueva plantilla.
+if(templateSelect) templateSelect.addEventListener('change', ()=>{
+  const s = project.slides[project.current];
+  s.template = templateSelect.value;
+  s.variant = window.defaultVariant ? window.defaultVariant(s.template) : '';
+  s.mode = window.defaultMode ? window.defaultMode(s.template) : 'light';
+  populateVariantOptions(s.template, s.variant);
+  populateModeOptions(s.template, s.mode);
+  updateFieldVisibility(s.template);
+  updateWordCounter(); refreshSlidesList(); render();
+});
+
+// Cambio de variante o modo
+if(variantSelect) variantSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
+if(modeSelect) modeSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
 
 // will open template picker to choose template when adding
 // (template picker UI defined in index.html)
@@ -236,7 +372,9 @@ function render(){
   // Now allocate remaining to subtitle then body then creds/steps
   if(remaining > 0 && state.subtitle){ const use = Math.min(remaining, countWords(state.subtitle)); state.subtitle = truncateWordsLocal(state.subtitle, use); remaining -= use; }
   if(remaining > 0 && state.body){ const use = Math.min(remaining, countWords(state.body)); state.body = truncateWordsLocal(state.body, use); remaining -= use; }
-  if(remaining > 0 && Array.isArray(state.creds)){
+  // La plantilla Autoridad es una lista de credenciales: se exime del recorte
+  // de 25 palabras para no mutilar las viñetas.
+  if(remaining > 0 && Array.isArray(state.creds) && s.template !== 'Autoridad'){
     for(let i=0;i<state.creds.length && remaining>0;i++){ const cw = countWords(state.creds[i]); const use = Math.min(remaining, cw); state.creds[i] = truncateWordsLocal(state.creds[i], use); remaining -= use; }
   }
   if(remaining > 0 && Array.isArray(state.steps)){
@@ -318,6 +456,9 @@ function applyImportedContent(parsed, mode){
 
     // common mapping (texts import or full replace)
     base.template = mapTemplateKey(inc.template || inc.type || inc.layout || inc.style || base.template);
+    // variante y modo (con defaults si no se especifican)
+    base.variant = window.normalizeVariant ? window.normalizeVariant(base.template, inc.variant) : (inc.variant || base.variant || '');
+    base.mode = window.normalizeMode ? window.normalizeMode(base.template, inc.mode || inc.contrast) : (inc.mode || base.mode || 'light');
     base.eyebrow = inc.eyebrow || inc.eyelash || base.eyebrow || '';
     base.title = inc.title || inc.heading || inc.headline || base.title || '';
     base.subtitle = inc.subtitle || inc.subheading || base.subtitle || '';
@@ -351,6 +492,7 @@ function showImportMessage(msg, isError=true){ importMessage.textContent = msg; 
 /* ===== IA asistida: copiar prompts (sin APIs externas) ===== */
 const promptTopic = document.getElementById('promptTopic');
 const promptGoal = document.getElementById('promptGoal');
+const promptAudience = document.getElementById('promptAudience');
 const copyPromptClaude = document.getElementById('copyPromptClaude');
 const copyPromptOptimize = document.getElementById('copyPromptOptimize');
 const promptMessage = document.getElementById('promptMessage');
@@ -358,46 +500,72 @@ const promptMessage = document.getElementById('promptMessage');
 function buildClaudePrompt(){
   const topic = (promptTopic && promptTopic.value.trim()) || '';
   const goal = (promptGoal && promptGoal.value.trim()) || '';
+  const audience = (promptAudience && promptAudience.value.trim()) || '';
   const topicLine = topic ? `Tema del carrusel: ${topic}` : 'Tema del carrusel: (elige uno relevante para fotografía newborn)';
   const goalLine = goal ? `Objetivo del carrusel: ${goal}` : 'Objetivo del carrusel: que la mamá reserve su sesión por DM.';
+  const audienceLine = audience ? `Público objetivo: ${audience}` : 'Público objetivo: mamás y familias esperando un bebé en Querétaro.';
+
+  // Mapa nombre interno -> llave JSON
+  const JSON_KEYS = {'Portada':'portada','Problema':'problema','Urgencia biológica':'urgencia','Solución':'solucion','Objeción':'objecion','Autoridad':'autoridad','CTA':'cta'};
+  // Referencia de plantillas (variantes, modos y campos) generada desde la app
+  const ref = Object.keys(JSON_KEYS).map(name=>{
+    const key = JSON_KEYS[name];
+    const vs = ((window.VARIANTS && window.VARIANTS[name]) || []).map(v=>v.id).join(' | ');
+    const ms = ((window.MODES && window.MODES[name]) || []).join(' | ');
+    const fs = (TEMPLATE_FIELDS[name] || []).join(', ');
+    return `- "${key}"  · variantes: ${vs}  · modos: ${ms}  · campos: ${fs}`;
+  }).join('\n');
+
   return `Eres el redactor de Bambuky, un estudio de fotografía newborn en Querétaro, México.
+
+Antes de escribir, revisa el sitio web del negocio para captar tono, servicios y datos reales:
+https://www.bambuky.com
 
 Genera un carrusel de Instagram compatible con Bambuky Content Studio.
 
 ${topicLine}
 ${goalLine}
+${audienceLine}
 
-REGLAS OBLIGATORIAS:
-- Responde ÚNICAMENTE con JSON válido.
-- NO uses markdown. NO uses bloques de código. NO añadas explicaciones ni texto antes o después.
-- Exactamente 7 slides, en este orden y con estos templates:
-  1. "portada"
-  2. "problema"
-  3. "urgencia"
-  4. "solucion"
-  5. "objecion"
-  6. "autoridad"
-  7. "cta"
-- Máximo 25 palabras VISIBLES por slide (suma de eyebrow + title + subtitle + body).
+REGLAS OBLIGATORIAS
+- Responde ÚNICAMENTE con JSON válido. NADA de markdown, bloques de código, comentarios ni texto antes o después.
+- Exactamente 7 slides, en este orden de templates: portada, problema, urgencia, solucion, objecion, autoridad, cta.
 - Voz Bambuky: cálida, humana, tranquila y experta. Nunca agresiva ni de oferta barata.
-- SEO local: menciona de forma natural "Querétaro" y "fotografía newborn Querétaro" donde encaje.
-- El CTA invita a escribir por DM.
-- Incluye "caption" (pie de publicación) y "hashtags".
+- SEO local: integra de forma natural "Querétaro" y "fotografía newborn Querétaro".
+- El CTA invita a escribir por DM (sin precios en el diseño).
+- Entrega también "caption" (pie de publicación) y "hashtags".
 
-ESTRUCTURA EXACTA DEL JSON (usa estas llaves):
+LÍMITES DE PALABRAS POR CAMPO (por diseño; respétalos para que el JSON quede listo para usar)
+- eyebrow: máximo 5 palabras.
+- title: máximo 9 palabras.
+- subtitle: máximo 12 palabras.
+- body: máximo 3 líneas ≈ máximo 18 palabras.
+- number: 1 dato muy corto (ej. "+830", "10", "5–15").
+- creds (solo "autoridad"): 3 a 4 items, cada uno máximo 6 palabras.
+- cta: máximo 5 palabras.
+- REGLA GLOBAL: máximo 25 palabras VISIBLES por slide sumando eyebrow + title + subtitle + body. (Las credenciales de "autoridad" no cuentan en ese límite.)
+
+CAMPOS, VARIANTES Y MODOS DISPONIBLES (usa solo los campos listados para cada template)
+${ref}
+
+CÓMO ELEGIR
+- variant: define la composición. Si no estás seguro, omítela (se usa la principal) o elige la más adecuada al mensaje.
+- mode: contraste visual de la slide. Si la slide llevará foto clara usa "light"; foto oscura "dark"; foto con mucho contraste "overlay"; "split" muestra foto + bloque de color; "highlight" resalta (solo autoridad). Si no estás seguro, usa "light".
+
+ESTRUCTURA EXACTA DEL JSON
 {
   "projectName": "string",
   "slides": [
-    { "template": "portada",   "eyebrow": "", "title": "", "subtitle": "" },
-    { "template": "problema",  "eyebrow": "", "title": "", "body": "" },
-    { "template": "urgencia",  "eyebrow": "", "number": "", "subtitle": "", "body": "" },
-    { "template": "solucion",  "eyebrow": "", "title": "", "body": "" },
-    { "template": "objecion",  "eyebrow": "", "title": "", "body": "" },
-    { "template": "autoridad", "eyebrow": "", "title": "", "creds": ["", "", ""], "subtitle": "" },
-    { "template": "cta",       "eyebrow": "Querétaro · México", "title": "", "subtitle": "", "cta": "Escríbenos por DM" }
+    { "template": "portada",   "variant": "hero",        "mode": "light", "eyebrow": "", "title": "", "subtitle": "" },
+    { "template": "problema",  "variant": "pregunta",    "mode": "light", "eyebrow": "", "title": "", "body": "" },
+    { "template": "urgencia",  "variant": "ventana",     "mode": "light", "eyebrow": "", "number": "", "subtitle": "", "body": "" },
+    { "template": "solucion",  "variant": "proceso",     "mode": "light", "eyebrow": "", "title": "", "body": "" },
+    { "template": "objecion",  "variant": "pregunta",    "mode": "light", "eyebrow": "", "title": "", "body": "" },
+    { "template": "autoridad", "variant": "experiencia", "mode": "dark",  "eyebrow": "", "title": "", "creds": ["", "", ""], "subtitle": "" },
+    { "template": "cta",       "variant": "pregunta",    "mode": "dark",  "eyebrow": "Querétaro · México", "title": "", "subtitle": "", "cta": "Escríbenos por DM" }
   ],
-  "caption": "string",
-  "hashtags": "string"
+  "caption": "Pie de publicación de 3 a 6 párrafos cortos, tono Bambuky, con un llamado final a escribir por DM.",
+  "hashtags": "10 a 15 hashtags en una sola cadena separada por espacios, incluyendo fotografía newborn y Querétaro."
 }
 
 Devuelve solo el JSON.`;
@@ -408,10 +576,11 @@ function buildOptimizePrompt(){
 
 REGLAS:
 - Responde ÚNICAMENTE con JSON válido. Sin markdown, sin explicaciones.
-- Conserva exactamente los mismos templates y las mismas llaves de cada slide.
-- Máximo 25 palabras visibles por slide; prioriza titulares cortos y potentes.
+- Conserva exactamente los mismos templates, variant, mode y las mismas llaves de cada slide.
+- Respeta los límites de diseño: eyebrow ≤ 5 palabras, title ≤ 9, subtitle ≤ 12, body ≤ 3 líneas (≈18 palabras), cta ≤ 5, credenciales ≤ 6 palabras c/u.
+- Máximo 25 palabras visibles por slide (eyebrow + title + subtitle + body); prioriza titulares cortos y potentes.
 - Mantén la voz Bambuky: cálida, humana, tranquila y experta.
-- Conserva el SEO local (Querétaro / fotografía newborn Querétaro) si ya estaba.
+- Conserva el SEO local (Querétaro / fotografía newborn Querétaro) y el caption/hashtags si ya estaban.
 
 JSON a optimizar:
 `;
@@ -481,29 +650,14 @@ exportCarouselBtn.addEventListener('click', async ()=>{
 });
 
 // Interaction simplified: dragging and manual positioning disabled in production mode.
+// (La inicialización ocurre al final del archivo, una vez declarados los
+//  elementos del mockup de Instagram, para evitar TDZ en syncIGPreview.)
 
-// Initialize all on page load — after all functions are defined
-if(projectNameInput) projectNameInput.value = project.name || '';
-refreshSlidesList(); loadSlideToUI(); render();
+// Estilo visual único: Instagram First (ya fijado como window.TEMPLATES por
+// templates-ig.js). Se mantiene cargado templates.js solo por sus helpers.
 
-// Toggle de estilo visual: Instagram First (lectura móvil) vs Editorial.
-// Ambos sets comparten las mismas 7 claves, así que cambiar no afecta
-// los datos de los slides ni el import/export.
-const styleMode = document.getElementById('styleMode');
-if(styleMode){
-  styleMode.addEventListener('change', ()=>{
-    window.TEMPLATES = (styleMode.value === 'editorial')
-      ? window.TEMPLATES_EDITORIAL
-      : window.TEMPLATES_IG;
-    render();
-  });
-}
-
-/* ===== Preview Instagram (mockup, no se exporta) ===== */
-const viewClean = document.getElementById('viewClean');
-const viewIG = document.getElementById('viewIG');
+/* ===== Preview Instagram (mockup, única vista) ===== */
 const igMockup = document.getElementById('igMockup');
-const previewWrap = document.querySelector('.preview-wrap');
 const igImage = document.getElementById('igImage');
 const igPrev = document.getElementById('igPrev');
 const igNext = document.getElementById('igNext');
@@ -537,18 +691,6 @@ function syncIGPreview(){
   }
 }
 
-function setView(v){
-  currentView = v;
-  if(previewWrap) previewWrap.style.display = (v === 'clean') ? '' : 'none';
-  if(igMockup) igMockup.classList.toggle('hidden', v !== 'ig');
-  if(viewClean) viewClean.classList.toggle('active', v === 'clean');
-  if(viewIG) viewIG.classList.toggle('active', v === 'ig');
-  if(v === 'ig') render(); // render() llama a syncIGPreview al final
-}
-
-if(viewClean) viewClean.addEventListener('click', ()=> setView('clean'));
-if(viewIG) viewIG.addEventListener('click', ()=> setView('ig'));
-
 function igGo(delta){
   const total = project.slides.length;
   const next = project.current + delta;
@@ -558,6 +700,11 @@ function igGo(delta){
 }
 if(igPrev) igPrev.addEventListener('click', ()=> igGo(-1));
 if(igNext) igNext.addEventListener('click', ()=> igGo(1));
+
+// Inicialización (al final: ya están declarados los elementos del mockup que
+// usa syncIGPreview, llamado desde render()).
+if(projectNameInput) projectNameInput.value = project.name || '';
+refreshSlidesList(); loadSlideToUI(); render();
 
 // Re-render once the editorial fonts have loaded (Cormorant / DM Sans),
 // so the canvas uses the real typefaces instead of the serif/sans fallback.
