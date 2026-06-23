@@ -431,11 +431,10 @@ function fInk(t, state){
   return {h:t.inkDark||t.textPrimary, p:t.inkSoft||t.textSecondary, a:t.accent};
 }
 
-// CHROME COVER — foto + velos suaves + marco + masthead + dateline con filetes.
-// veilBottom controla el velo inferior (0.60 portada · 0.66 interiores con texto).
+// CHROME COVER — respeta state.contrast: overlay / dark / light.
 function fCoverChrome(ctx, state, t, veilBottom){
-  var photo=hasPhoto(state), c;
-  if(photo){
+  var photo=hasPhoto(state), cm=state.contrast||'light', c;
+  if(cm==='overlay' && photo){
     fullPhoto(ctx,state.image);
     ctx.fillStyle='rgba('+t.overlayRgb+',0.10)'; ctx.fillRect(0,0,W,H);
     var gT=ctx.createLinearGradient(0,0,0,H*0.30);
@@ -450,7 +449,15 @@ function fCoverChrome(ctx, state, t, veilBottom){
     gB.addColorStop(1,'rgba('+t.overlayRgb+','+vb+')');
     ctx.fillStyle=gB; ctx.fillRect(0,H*0.42,W,H*0.58);
     c=txtPhoto(t);
-  } else { gradientBg(ctx,t); c=txtSolid(t); }
+  } else if(cm==='dark'){
+    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',0.62); }
+    else solidBg(ctx,t);
+    c=photo?txtPhoto(t):txtSolid(t);
+  } else {
+    if(photo) gradientBg(ctx,t);
+    else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); }
+    c=txtSolid(t);
+  }
   c=textColors(c,t,state);
   ctx.save(); ctx.globalAlpha=0.30; ctx.strokeStyle=c.h; ctx.lineWidth=1.5;
   ctx.strokeRect(50,50,W-100,H-100); ctx.restore();
@@ -467,13 +474,10 @@ function fCoverChrome(ctx, state, t, veilBottom){
   return c;
 }
 
-// CHROME MODERNA — foto + tinte mínimo + masthead arriba-izq + dateline vertical.
-// Velo direccional inferior: garantiza legibilidad del bloque inferior-izquierdo
-// sin tapar al sujeto (la cara queda intacta). Claro para texto oscuro (foto
-// high-key), oscuro para texto claro (foto oscura). Conserva la asimetría.
+// CHROME MODERNA — respeta state.contrast: overlay / dark / light.
 function fModernaChrome(ctx, state, t){
-  var photo=hasPhoto(state), c;
-  if(photo){
+  var photo=hasPhoto(state), cm=state.contrast||'light', c;
+  if(cm==='overlay' && photo){
     fullPhoto(ctx,state.image);
     ctx.fillStyle='rgba('+t.overlayRgb+',0.06)'; ctx.fillRect(0,0,W,H);
     c=fInk(t,state);
@@ -489,7 +493,16 @@ function fModernaChrome(ctx, state, t){
       g.addColorStop(1,'rgba(247,245,240,0.80)');
     }
     ctx.fillStyle=g; ctx.fillRect(0,H*0.38,W,H*0.62);
-  } else { gradientBg(ctx,t); c={h:t.textPrimary,p:t.textSecondary,a:t.accent}; }
+  } else if(cm==='dark'){
+    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',0.62); }
+    else solidBg(ctx,t);
+    c=photo?txtPhoto(t):txtSolid(t);
+  } else {
+    if(photo) gradientBg(ctx,t);
+    else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); }
+    c={h:t.textPrimary,p:t.textSecondary,a:t.accent};
+  }
+  c=textColors(c,t,state);
   fMasthead(ctx,c.h,'left',32,8,118,0.95);
   var dl=(state.eyebrow||'Bambuky · Querétaro').toUpperCase();
   ctx.save(); ctx.translate(W-68,H/2); ctx.rotate(-Math.PI/2);
@@ -500,12 +513,23 @@ function fModernaChrome(ctx, state, t){
   return c;
 }
 
-// CHROME MINIMA — foto + tinte mínimo + masthead centrado. Máximo aire.
+// CHROME MINIMA — respeta state.contrast: overlay / dark / light.
 function fMinimaChrome(ctx, state, t){
-  var photo=hasPhoto(state);
-  if(photo){ fullPhoto(ctx,state.image); ctx.fillStyle='rgba('+t.overlayRgb+',0.05)'; ctx.fillRect(0,0,W,H); }
-  else gradientBg(ctx,t);
-  var c = photo ? fInk(t,state) : {h:t.textPrimary,p:t.textSecondary,a:t.accent};
+  var photo=hasPhoto(state), cm=state.contrast||'light', c;
+  if(cm==='overlay' && photo){
+    fullPhoto(ctx,state.image);
+    ctx.fillStyle='rgba('+t.overlayRgb+',0.05)'; ctx.fillRect(0,0,W,H);
+    c=fInk(t,state);
+  } else if(cm==='dark'){
+    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',0.55); }
+    else solidBg(ctx,t);
+    c=photo?txtPhoto(t):txtSolid(t);
+  } else {
+    if(photo) gradientBg(ctx,t);
+    else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); }
+    c={h:t.textPrimary,p:t.textSecondary,a:t.accent};
+  }
+  c=textColors(c,t,state);
   fMasthead(ctx,c.h,'center',40,10,122,null);
   return c;
 }
