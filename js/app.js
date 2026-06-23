@@ -610,14 +610,17 @@ if(textOffsetYSlider) textOffsetYSlider.addEventListener('input', ()=>{
 });
 
 // Legacy/experimental variants toggle
-// Collapsible AI panel
-const aiHeader = document.getElementById('aiHeader');
-const aiPanel = document.getElementById('aiPanel');
-if(aiHeader) aiHeader.addEventListener('click', ()=>{
-  const open = aiPanel.style.display !== 'none';
-  aiPanel.style.display = open ? 'none' : '';
-  aiHeader.classList.toggle('open', !open);
-});
+// AI modal open/close
+const aiModal = document.getElementById('aiModal');
+const openAiModal = document.getElementById('openAiModal');
+const closeAiModal = document.getElementById('closeAiModal');
+const aiBackdrop = aiModal && aiModal.querySelector('.ai-modal-backdrop');
+function toggleAiModal(show){
+  if(aiModal) aiModal.classList.toggle('hidden', !show);
+}
+if(openAiModal) openAiModal.addEventListener('click', ()=> toggleAiModal(true));
+if(closeAiModal) closeAiModal.addEventListener('click', ()=> toggleAiModal(false));
+if(aiBackdrop) aiBackdrop.addEventListener('click', ()=> toggleAiModal(false));
 
 // palette controls removed in production mode
 
@@ -681,10 +684,6 @@ exportSlideBtn.addEventListener('click', async ()=>{
 });
 
 // top export buttons
-const exportSlideTop = document.getElementById('exportSlideTop');
-const exportCarouselTop = document.getElementById('exportCarouselTop');
-if(exportSlideTop) exportSlideTop.addEventListener('click', ()=> exportSlideBtn.click());
-if(exportCarouselTop) exportCarouselTop.addEventListener('click', ()=> exportCarouselBtn.click());
 
 // Import UI elements
 const importTextarea = document.getElementById('importTextarea');
@@ -930,6 +929,7 @@ importApply && importApply.addEventListener('click', ()=>{
     // allow array or object with slides
     applyImportedContent(parsed, 'replace');
     showImportMessage('Contenido importado correctamente.', false);
+    setTimeout(()=> toggleAiModal(false), 800);
   } catch(e){ showImportMessage('No pude leer este contenido. Revisa que sea JSON válido.'); }
 });
 

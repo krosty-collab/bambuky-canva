@@ -179,12 +179,22 @@
             <button id="exportSlide" class="btn-secondary">Exportar Slide (JPG)</button>
             <button id="exportCarousel" class="btn-secondary">Exportar Carrusel (ZIP)</button>
           </div>
+          <div id="captionRow" class="btn-stack" style="display:none;margin-top:8px">
+            <button id="copyCaption" class="btn-secondary">Copiar caption para Instagram</button>
+          </div>
+          <div id="captionMessage" class="msg-ok"></div>
         </section>
+      </aside>
 
-        <!-- GENERAR CON IA (colapsable, se usa una vez) -->
-        <section class="panel">
-          <h2 class="collapsible-header" id="aiHeader"><span class="step">IA</span> Generar con Claude <span class="collapse-arrow">▾</span></h2>
-          <div id="aiPanel" class="collapsible-body" style="display:none">
+      <!-- Modal: Generar con Claude -->
+      <div id="aiModal" class="ai-modal hidden">
+        <div class="ai-modal-backdrop"></div>
+        <div class="ai-modal-panel">
+          <div class="ai-modal-header">
+            <h3>Generar con Claude</h3>
+            <button id="closeAiModal" type="button">✕</button>
+          </div>
+          <div class="ai-modal-body">
             <p class="panel-hint">Genera el prompt, cópialo a Claude y pega el JSON resultante.</p>
             <label>Tema del carrusel</label>
             <textarea id="promptTopic" rows="2" placeholder="Ej: Cuándo reservar una sesión newborn"></textarea>
@@ -192,23 +202,19 @@
             <textarea id="promptGoal" rows="2" placeholder="Ej: Que reserven antes de los 15 días por DM"></textarea>
             <label>Público <span class="opt">(opcional)</span></label>
             <textarea id="promptAudience" rows="2" placeholder="Ej: Mamás primerizas embarazadas en Querétaro"></textarea>
-            <div class="btn-stack">
+            <div class="btn-stack" style="margin-top:10px">
               <button id="copyPromptClaude">Copiar prompt para Claude</button>
             </div>
             <div id="promptMessage" class="msg-ok"></div>
-            <label style="margin-top:12px">Importar JSON</label>
-            <textarea id="importTextarea" rows="6" placeholder='[ { "template":"portada","title":"..." } ]'></textarea>
-            <div class="btn-stack">
+            <label style="margin-top:16px">Importar JSON</label>
+            <textarea id="importTextarea" rows="8" placeholder='[ { "template":"portada","title":"..." } ]'></textarea>
+            <div class="btn-stack" style="margin-top:8px">
               <button id="importApply">Importar JSON</button>
             </div>
             <div id="importMessage" class="msg-err"></div>
-            <div id="captionRow" class="btn-stack" style="display:none;margin-top:8px">
-              <button id="copyCaption" class="btn-secondary">Copiar caption para Instagram</button>
-            </div>
-            <div id="captionMessage" class="msg-ok"></div>
           </div>
-        </section>
-      </aside>
+        </div>
+      </div>
 
       <!-- Template picker modal -->
       <div id="templatePicker" class="template-picker hidden">
@@ -229,8 +235,7 @@
             <span id="slideIndicator">Slide 1 / 7</span>
           </div>
           <div class="preview-actions">
-            <button id="exportSlideTop">Exportar Slide</button>
-            <button id="exportCarouselTop">Exportar Carrusel</button>
+            <button id="openAiModal" class="btn-ai" type="button">✦ Generar con Claude</button>
           </div>
         </div>
         <div class="preview-wrap">
