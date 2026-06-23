@@ -43,6 +43,9 @@ const resetFontScalesBtn = document.getElementById('resetFontScales');
 const overlayOpacitySlider = document.getElementById('overlayOpacity');
 const overlayOpacityValue = document.getElementById('overlayOpacityValue');
 const textAlignBtns = document.getElementById('textAlignButtons');
+const frameCheck = document.getElementById('frameCheck');
+const textOffsetYSlider = document.getElementById('textOffsetY');
+const textOffsetYValue = document.getElementById('textOffsetYValue');
 
 // Rellena los selects de variante y modo según la plantilla activa.
 let _showLegacy = false;
@@ -233,6 +236,9 @@ function loadSlideToUI(){
   setActiveTextColor(s.textColorMode || 'base-accent');
   setActiveAlign(s.textAlign);
   if(logoCheck) logoCheck.checked = (s.showLogo !== false);
+  if(frameCheck) frameCheck.checked = (s.showFrame !== false);
+  if(textOffsetYSlider){ textOffsetYSlider.value = s.textOffsetY || 0; }
+  if(textOffsetYValue) textOffsetYValue.textContent = s.textOffsetY || 0;
   if(modeSuggestion) modeSuggestion.textContent = '';
   updateFieldVisibility(s.template);
   updateImageUI();
@@ -581,6 +587,16 @@ closePicker && closePicker.addEventListener('click', ()=> closeTemplatePicker())
 const logoCheck = document.getElementById('logoCheck');
 if(logoCheck) logoCheck.addEventListener('change', ()=>{
   project.slides[project.current].showLogo = logoCheck.checked;
+  render();
+});
+if(frameCheck) frameCheck.addEventListener('change', ()=>{
+  project.slides[project.current].showFrame = frameCheck.checked;
+  render();
+});
+if(textOffsetYSlider) textOffsetYSlider.addEventListener('input', ()=>{
+  var v = Number(textOffsetYSlider.value) || 0;
+  project.slides[project.current].textOffsetY = v;
+  if(textOffsetYValue) textOffsetYValue.textContent = v;
   render();
 });
 
