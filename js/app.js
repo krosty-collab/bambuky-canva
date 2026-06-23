@@ -503,7 +503,8 @@ applyFontPreset(project.fontPreset || 'editorial-bambuky');
 
 // Font scale +/- controls
 document.querySelectorAll('.font-scale .fs-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click', (e)=>{
+    e.preventDefault(); e.stopPropagation();
     const el = btn.closest('.font-scale');
     const field = el.dataset.scale;
     const s = project.slides[project.current];

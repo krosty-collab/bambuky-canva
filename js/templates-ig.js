@@ -270,11 +270,14 @@ function contrastBg(ctx, state, t, overlayDir, overlayStrength){
     colors = photo ? txtPhoto(t) : txtSolid(t);
   } else {
     if(photo){
-      gradientBg(ctx,t);
+      fullPhoto(ctx,state.image);
+      var la=Math.max(0.10,(0.55*_overlayOpacity*2)); la=Math.min(la,0.90);
+      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+      colors = txtPhoto(t);
     } else {
       ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H);
+      colors = txtSolid(t);
     }
-    colors = txtSolid(t);
   }
   return textColors(colors, t, state);
 }
@@ -466,9 +469,12 @@ function fCoverChrome(ctx, state, t, veilBottom){
     else solidBg(ctx,t);
     c=photo?txtPhoto(t):txtSolid(t);
   } else {
-    if(photo) gradientBg(ctx,t);
-    else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); }
-    c=txtSolid(t);
+    if(photo){
+      fullPhoto(ctx,state.image);
+      var la=Math.max(0.10,(0.55*op*2)); la=Math.min(la,0.90);
+      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+      c=txtPhoto(t);
+    } else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); c=txtSolid(t); }
   }
   c=textColors(c,t,state);
   ctx.save(); ctx.globalAlpha=0.30; ctx.strokeStyle=c.h; ctx.lineWidth=1.5;
@@ -510,9 +516,12 @@ function fModernaChrome(ctx, state, t){
     else solidBg(ctx,t);
     c=photo?txtPhoto(t):txtSolid(t);
   } else {
-    if(photo) gradientBg(ctx,t);
-    else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); }
-    c={h:t.textPrimary,p:t.textSecondary,a:t.accent};
+    if(photo){
+      fullPhoto(ctx,state.image);
+      var la=Math.max(0.10,(0.55*op*2)); la=Math.min(la,0.90);
+      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+      c=fInk(t,state);
+    } else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); c={h:t.textPrimary,p:t.textSecondary,a:t.accent}; }
   }
   c=textColors(c,t,state);
   fMasthead(ctx,c.h,'left',32,8,118,0.95);
@@ -537,9 +546,12 @@ function fMinimaChrome(ctx, state, t){
     else solidBg(ctx,t);
     c=photo?txtPhoto(t):txtSolid(t);
   } else {
-    if(photo) gradientBg(ctx,t);
-    else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); }
-    c={h:t.textPrimary,p:t.textSecondary,a:t.accent};
+    if(photo){
+      fullPhoto(ctx,state.image);
+      var la=Math.max(0.10,(0.55*op*2)); la=Math.min(la,0.90);
+      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+      c=fInk(t,state);
+    } else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); c={h:t.textPrimary,p:t.textSecondary,a:t.accent}; }
   }
   c=textColors(c,t,state);
   fMasthead(ctx,c.h,'center',40,10,122,null);
