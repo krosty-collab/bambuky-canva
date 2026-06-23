@@ -123,7 +123,7 @@ const exportSlideBtn = document.getElementById('exportSlide');
 const exportCarouselBtn = document.getElementById('exportCarousel');
 
 let project = {
-  name: 'Los primeros días', slides: [], current: 0, globalTheme: 'sage-garden', fontPreset: 'editorial-bambuky'
+  name: 'Los primeros días', slides: [], current: 0, globalTheme: 'sage-garden', fontPreset: 'moderno-premium'
 };
 
 // Vista única: mockup de Instagram. Debe declararse ANTES de la primera
@@ -280,10 +280,10 @@ function countWordsUI(t){ return t ? t.trim().split(/\s+/).filter(Boolean).lengt
 function updateWordCounter(){
   if(!wordCounter) return;
   const isAutoridad = templateSelect && templateSelect.value === 'Autoridad';
-  let n = countWordsUI(fieldEyebrow.value) + countWordsUI(fieldTitle.value)
+  let n = countWordsUI(fieldTitle.value)
         + countWordsUI(fieldSubtitle.value) + countWordsUI(fieldBody.value);
   if(!isAutoridad) n += countWordsUI((fieldCreds.value || '').replace(/\n/g, ' '));
-  wordCounter.textContent = n + ' / 30 palabras visibles' + (isAutoridad ? ' (credenciales sin límite)' : '');
+  wordCounter.textContent = n + ' / 30 palabras (título + subtítulo + texto)' + (isAutoridad ? ' · credenciales sin límite' : '');
   wordCounter.style.color = (n > 30) ? '#8B0000' : 'var(--text-muted)';
 }
 
@@ -627,19 +627,15 @@ function render(){
   state._page = project.current + 1;
   state._total = project.slides.length;
 
-  // Enforce max 30 visible words per slide. Strategy: keep eyebrow and title, then fit body/creds/steps into remaining.
+  // Enforce max 30 visible words per slide (title + subtitle + body; eyebrow excluded).
   function countWords(t){ if(!t) return 0; return t.toString().trim().split(/\s+/).filter(Boolean).length; }
   function truncateWordsLocal(t, max){ if(!t) return ''; const words = t.trim().split(/\s+/); if(words.length<=max) return t; return words.slice(0,max).join(' ') + '…'; }
 
-  let reserved = 0;
-  reserved += countWords(state.eyebrow);
-  reserved += countWords(state.title);
-  // count minimal mandatory fields
+  let reserved = countWords(state.title);
   let remaining = 30 - reserved;
-  if(remaining < 0){ // truncate title first
-    const allowedTitle = Math.max(0,30 - countWords(state.eyebrow));
-    state.title = truncateWordsLocal(state.title, allowedTitle);
-    remaining = 30 - (countWords(state.eyebrow) + countWords(state.title));
+  if(remaining < 0){
+    state.title = truncateWordsLocal(state.title, 30);
+    remaining = 30 - countWords(state.title);
   }
 
   // Now allocate remaining to subtitle then body then creds/steps
@@ -821,9 +817,9 @@ function buildClaudePrompt(){
     return `- "${key}"  · variantes: ${vs}  · modos: ${ms}  · campos: ${fs}`;
   }).join('\n');
 
-  return `Eres el redactor de Bambuky, un estudio de fotografía newborn en Querétaro, México.
+  return `Eres el redactor de Bambuky, un estudio premium de fotografía newborn, maternidad y familias en Querétaro, México.
 
-Antes de escribir, revisa el sitio web del negocio para captar tono, servicios y datos reales:
+Antes de escribir, revisa el sitio web para captar tono, servicios y datos reales:
 https://www.bambuky.com
 
 Genera un carrusel de Instagram compatible con Bambuky Content Studio.
@@ -835,43 +831,56 @@ ${audienceLine}
 REGLAS OBLIGATORIAS
 - Responde ÚNICAMENTE con JSON válido. NADA de markdown, bloques de código, comentarios ni texto antes o después.
 - Exactamente 7 slides, en este orden de templates: portada, problema, urgencia, solucion, objecion, autoridad, cta.
-- Voz Bambuky: cálida, humana, tranquila y experta. Nunca agresiva ni de oferta barata.
+- Voz Bambuky: cálida, humana, tranquila y experta. Nunca agresiva ni de oferta barata. Frases cortas, ritmo editorial.
 - SEO local: integra de forma natural "Querétaro" y "fotografía newborn Querétaro".
 - El CTA invita a escribir por DM (sin precios en el diseño).
 - Entrega también "caption" (pie de publicación) y "hashtags".
 
-LÍMITES DE PALABRAS POR CAMPO (por diseño; respétalos para que el JSON quede listo para usar)
-- eyebrow: máximo 5 palabras.
-- title: máximo 9 palabras.
-- subtitle: máximo 12 palabras.
-- body: máximo 3 líneas ≈ máximo 22 palabras.
-- number: 1 dato muy corto (ej. "+830", "10", "5–15").
-- creds (solo "autoridad"): 3 a 4 items, cada uno máximo 6 palabras.
-- cta: máximo 5 palabras.
-- REGLA GLOBAL: máximo 30 palabras VISIBLES por slide sumando eyebrow + title + subtitle + body. Priorizar frases cortas y legibles para Instagram. Usar palabras resaltadas entre llaves {} solo cuando aporte claridad visual. (Las credenciales de "autoridad" no cuentan en ese límite.)
+LÍMITES DE PALABRAS — CRÍTICO, RESPÉTALOS EXACTAMENTE
+El eyebrow NO cuenta en el límite de 30 palabras. El límite aplica solo a: title + subtitle + body.
 
-CAMPOS, VARIANTES Y MODOS DISPONIBLES (usa solo los campos listados para cada template)
+Por campo:
+- eyebrow: máximo 5 palabras. Queda FUERA del conteo de 30.
+- title: máximo 9 palabras. Corto, impactante, editorial.
+- subtitle: máximo 12 palabras.
+- body: máximo 18 palabras (≈ 2-3 líneas cortas). Si el slide lleva title largo, el body debe ser más corto.
+- number: 1 dato muy corto (ej. "+830", "10", "5–15").
+- creds (solo "autoridad"): 3 a 4 items, cada uno máximo 6 palabras. No cuentan en el límite de 30.
+- cta: máximo 5 palabras.
+
+⚠ REGLA GLOBAL: la suma de title + subtitle + body NO debe exceder 30 palabras por slide. Cuenta antes de entregar. Si excede, recorta el body.
+Priorizar frases cortas y legibles para Instagram. Menos texto = más premium.
+Puedes usar llaves {palabra} para resaltar palabras clave. Se renderizan con el color accent del tema. Las llaves no cuentan como palabras.
+
+CAMPOS, VARIANTES Y MODOS DISPONIBLES
 ${ref}
 
-CÓMO ELEGIR
-- variant: define la composición visual. Si no estás seguro, omítela (se usa la principal) o elige la más adecuada al mensaje.
-- mode: tema de color del carrusel. Opciones: "sage-garden" (newborn, calma, familia), "heritage-blue" (premium, confianza, editorial), "blush-editorial" (maternidad, emoción, vínculo). Si no estás seguro, usa "sage-garden". Usa el mismo tema en todo el carrusel excepto autoridad y CTA que pueden usar "heritage-blue".
-- Puedes usar llaves {palabra} para resaltar palabras clave en los textos. Se renderizan con el color accent del tema.
+FAMILIAS EDITORIALES — USA ESTAS VARIANTES (no las legacy)
+El sistema tiene 3 familias visuales coherentes. Usa la misma familia en todo el carrusel:
+- "cover": editorial clásica con marco interior, masthead centrado, velos suaves. La más robusta.
+- "moderna": asimétrica, contemporánea, masthead a la izquierda, dateline vertical. Más impacto.
+- "minima": máximo protagonismo de la foto, texto mínimo, sensación galería/libro.
+Recomendación: usa "cover" si no estás seguro. Usa el mismo variant en las 7 slides.
+
+TEMAS DE COLOR — Usa el mismo en todo el carrusel:
+- "sage-garden": verde salvia, calma, naturaleza, newborn.
+- "heritage-blue": azul slate, premium, editorial, confianza.
+- "blush-editorial": rosa suave, maternidad, emoción, vínculo.
 
 ESTRUCTURA EXACTA DEL JSON
 {
   "projectName": "string",
   "slides": [
-    { "template": "portada",   "variant": "split",      "mode": "sage-garden", "eyebrow": "", "title": "", "subtitle": "" },
-    { "template": "problema",  "variant": "foto-frase",  "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
-    { "template": "urgencia",  "variant": "tiempo",      "mode": "sage-garden", "eyebrow": "", "number": "", "subtitle": "", "body": "" },
-    { "template": "solucion",  "variant": "metodo",      "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
-    { "template": "objecion",  "variant": "pregunta",    "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
-    { "template": "autoridad", "variant": "filosofia",   "mode": "heritage-blue", "eyebrow": "", "title": "", "creds": ["", "", ""], "subtitle": "" },
-    { "template": "cta",       "variant": "reserva",     "mode": "heritage-blue", "eyebrow": "Querétaro · México", "title": "", "subtitle": "", "cta": "Escríbenos por DM" }
+    { "template": "portada",   "variant": "cover", "mode": "sage-garden", "eyebrow": "", "title": "", "subtitle": "" },
+    { "template": "problema",  "variant": "cover", "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
+    { "template": "urgencia",  "variant": "cover", "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
+    { "template": "solucion",  "variant": "cover", "mode": "sage-garden", "eyebrow": "", "title": "", "body": "línea 1\\nlínea 2\\nlínea 3" },
+    { "template": "objecion",  "variant": "cover", "mode": "sage-garden", "eyebrow": "", "title": "", "body": "" },
+    { "template": "autoridad", "variant": "cover", "mode": "sage-garden", "eyebrow": "", "title": "", "creds": ["", "", ""], "subtitle": "" },
+    { "template": "cta",       "variant": "cover", "mode": "sage-garden", "eyebrow": "Querétaro · México", "title": "", "subtitle": "", "cta": "Escríbenos por DM" }
   ],
-  "caption": "Pie de publicación de 3 a 6 párrafos cortos, tono Bambuky, con un llamado final a escribir por DM.",
-  "hashtags": "10 a 15 hashtags en una sola cadena separada por espacios, incluyendo fotografía newborn y Querétaro."
+  "caption": "Pie de publicación de 3 a 6 párrafos cortos, tono Bambuky. Cierra invitando a escribir por DM.",
+  "hashtags": "10 a 15 hashtags en una sola cadena, incluyendo fotografía newborn y Querétaro."
 }
 
 Devuelve solo el JSON.`;
