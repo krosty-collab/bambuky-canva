@@ -160,14 +160,16 @@
 
             <button id="imageFrameReset" class="btn-secondary" type="button">Restablecer encuadre</button>
           </div>
-          <label style="margin-top:12px">Modo de contraste <span class="opt">(este slide)</span></label>
-          <select id="contrastSelect">
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="overlay">Overlay</option>
-          </select>
-          <label style="margin-top:10px">Opacidad del overlay <span id="overlayOpacityValue">50%</span></label>
-          <input id="overlayOpacity" type="range" min="0" max="100" value="50" />
+          <label style="margin-top:12px">Overlay fotográfico <span class="opt">(este slide)</span></label>
+          <div id="photoOverlayBtns" class="ov-btns">
+            <button type="button" class="ov-btn" data-ov="none" title="Sin overlay">Ninguno</button>
+            <button type="button" class="ov-btn" data-ov="dark" title="Oscuro sólido">Dark</button>
+            <button type="button" class="ov-btn" data-ov="light" title="Claro sólido">Light</button>
+            <button type="button" class="ov-btn" data-ov="gradient-dark" title="Degradado oscuro">Deg. Dark</button>
+            <button type="button" class="ov-btn" data-ov="gradient-light" title="Degradado claro">Deg. Light</button>
+          </div>
+          <label style="margin-top:10px">Intensidad <span id="photoOverlayOpacityValue">35%</span></label>
+          <input id="photoOverlayOpacity" type="range" min="0" max="100" value="35" />
           <div id="modeSuggestion" class="mode-suggestion"></div>
         </section>
 

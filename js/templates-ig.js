@@ -17,7 +17,8 @@ const COLOR_THEMES = {
     accent:'#B9CBDD', line:'rgba(245,243,239,0.35)',
     isDark:true, overlayRgb:'50,60,75',
     onPhoto:{primary:'#F5F3EF', secondary:'#D7E0EA'},
-    inkDark:'#2A3544', inkSoft:'#4D5D70'
+    inkDark:'#2A3544', inkSoft:'#4D5D70',
+    ovDark:'#2A3544', ovLight:'#E6ECF2', ovBase:'#F5F3EF'
   },
   'sage-garden': {
     name:'Sage Garden',
@@ -26,7 +27,8 @@ const COLOR_THEMES = {
     accent:'#87947E', line:'rgba(63,74,60,0.22)',
     isDark:false, overlayRgb:'50,56,48',
     onPhoto:{primary:'#F5F3EF', secondary:'#DDE0D8'},
-    inkDark:'#2E3A2B', inkSoft:'#4A5845'
+    inkDark:'#2E3A2B', inkSoft:'#4A5845',
+    ovDark:'#2E3A2B', ovLight:'#EEF0EA', ovBase:'#FBFAF7'
   },
   'blush-editorial': {
     name:'Blush Editorial',
@@ -35,7 +37,8 @@ const COLOR_THEMES = {
     accent:'#C89B91', line:'rgba(84,67,63,0.22)',
     isDark:false, overlayRgb:'65,52,48',
     onPhoto:{primary:'#FBF5F2', secondary:'#F3E6E2'},
-    inkDark:'#3E2E2A', inkSoft:'#5E4A44'
+    inkDark:'#3E2E2A', inkSoft:'#5E4A44',
+    ovDark:'#3E2E2A', ovLight:'#FBF5F2', ovBase:'#FBFAF7'
   }
 };
 
@@ -257,28 +260,8 @@ function solidBg(ctx, t){
 }
 
 function contrastBg(ctx, state, t, overlayDir, overlayStrength){
-  var cm = state.contrast || 'light';
-  var photo = hasPhoto(state);
-  var colors;
-  if(cm==='overlay' && photo){
-    fullPhoto(ctx,state.image);
-    overlay(ctx,t,overlayDir||'bottom',overlayStrength||0.7);
-    colors = txtPhoto(t);
-  } else if(cm==='dark'){
-    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',0.62); }
-    else solidBg(ctx,t);
-    colors = photo ? txtPhoto(t) : txtSolid(t);
-  } else {
-    if(photo){
-      fullPhoto(ctx,state.image);
-      var la=Math.max(0.10,(0.55*_overlayOpacity*2)); la=Math.min(la,0.90);
-      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-      colors = txtPhoto(t);
-    } else {
-      ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H);
-      colors = txtSolid(t);
-    }
-  }
+  applyPhotoOverlay(ctx,state,t);
+  var colors = hasPhoto(state) ? txtPhoto(t) : txtSolid(t);
   return textColors(colors, t, state);
 }
 
@@ -296,7 +279,8 @@ function textColors(c, t, state){
 }
 
 var _scales={title:1,subtitle:1,body:1,cta:1,eyebrow:1};
-var _overlayOpacity=0.5;
+var _ovMode='none';
+var _ovOpacity=0.35;
 var _textAlign='left';
 var _showFrame=true;
 var _textOffsetY=0;
@@ -320,7 +304,8 @@ function setScales(state){
   };
   _showLogo=(state.showLogo!==false);
   _showFrame=(state.showFrame!==false);
-  _overlayOpacity=(state.overlayOpacity!=null)?state.overlayOpacity:0.5;
+  _ovMode=state.photoOverlayMode||'none';
+  _ovOpacity=(state.photoOverlayOpacity!=null)?state.photoOverlayOpacity:0.35;
   _textAlign=state.textAlign||'left';
   _textOffsetY=Number(state.textOffsetY)||0;
 }
@@ -443,6 +428,74 @@ function fMasthead(ctx, color, align, size, tracking, y, alpha){
   ctx.restore();
 }
 
+/* ============================================================
+   OVERLAY FOTOGRÁFICO — sistema unificado
+   Aplica fondo + overlay según _ovMode y _ovOpacity.
+   Devuelve los colores de texto apropiados.
+   ============================================================ */
+function hexToRgb(hex){
+  var r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+
+function applyPhotoOverlay(ctx, state, t){
+  var photo=hasPhoto(state), op=_ovOpacity, mode=_ovMode;
+  var darkRgb=hexToRgb(t.ovDark||'#2E3A2B');
+  var lightRgb=hexToRgb(t.ovLight||'#EEF0EA');
+  var baseColor=t.ovBase||'#FBFAF7';
+
+  if(mode==='none'){
+    if(photo) fullPhoto(ctx,state.image);
+    else { ctx.fillStyle=baseColor; ctx.fillRect(0,0,W,H); }
+
+  } else if(mode==='dark'){
+    if(photo){
+      fullPhoto(ctx,state.image);
+      ctx.fillStyle='rgba('+darkRgb+','+op.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+    } else {
+      ctx.fillStyle=baseColor; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba('+darkRgb+','+op.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+    }
+
+  } else if(mode==='light'){
+    if(photo){
+      fullPhoto(ctx,state.image);
+      ctx.fillStyle='rgba('+lightRgb+','+op.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+    } else {
+      ctx.fillStyle=baseColor; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='rgba('+lightRgb+','+op.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
+    }
+
+  } else if(mode==='gradient-dark'){
+    if(photo) fullPhoto(ctx,state.image);
+    else { ctx.fillStyle=baseColor; ctx.fillRect(0,0,W,H); }
+    var gT=ctx.createLinearGradient(0,0,0,H*0.38);
+    gT.addColorStop(0,'rgba('+darkRgb+','+op.toFixed(3)+')');
+    gT.addColorStop(1,'rgba('+darkRgb+',0)');
+    ctx.fillStyle=gT; ctx.fillRect(0,0,W,H*0.42);
+    var gB=ctx.createLinearGradient(0,H*0.58,0,H);
+    gB.addColorStop(0,'rgba('+darkRgb+',0)');
+    gB.addColorStop(1,'rgba('+darkRgb+','+op.toFixed(3)+')');
+    ctx.fillStyle=gB; ctx.fillRect(0,H*0.55,W,H*0.45);
+
+  } else if(mode==='gradient-light'){
+    if(photo) fullPhoto(ctx,state.image);
+    else { ctx.fillStyle=baseColor; ctx.fillRect(0,0,W,H); }
+    var gT2=ctx.createLinearGradient(0,0,0,H*0.38);
+    gT2.addColorStop(0,'rgba('+lightRgb+','+op.toFixed(3)+')');
+    gT2.addColorStop(1,'rgba('+lightRgb+',0)');
+    ctx.fillStyle=gT2; ctx.fillRect(0,0,W,H*0.42);
+    var gB2=ctx.createLinearGradient(0,H*0.58,0,H);
+    gB2.addColorStop(0,'rgba('+lightRgb+',0)');
+    gB2.addColorStop(1,'rgba('+lightRgb+','+op.toFixed(3)+')');
+    ctx.fillStyle=gB2; ctx.fillRect(0,H*0.55,W,H*0.45);
+
+  } else {
+    if(photo) fullPhoto(ctx,state.image);
+    else { ctx.fillStyle=baseColor; ctx.fillRect(0,0,W,H); }
+  }
+}
+
 // Tinta oscura para familias moderna/minima (pensadas para foto clara).
 // Respeta el selector de color de texto (blanco para fotos oscuras).
 function fInk(t, state){
@@ -452,38 +505,10 @@ function fInk(t, state){
   return {h:t.inkDark||t.textPrimary, p:t.inkSoft||t.textSecondary, a:t.accent};
 }
 
-// CHROME COVER — respeta state.contrast + _overlayOpacity.
+// CHROME COVER — usa applyPhotoOverlay + textColors independiente.
 function fCoverChrome(ctx, state, t, veilBottom){
-  var photo=hasPhoto(state), cm=state.contrast||'light', c, op=_overlayOpacity;
-  if(cm==='overlay' && photo){
-    fullPhoto(ctx,state.image);
-    ctx.fillStyle='rgba('+t.overlayRgb+','+(0.10*op*2).toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-    var gT=ctx.createLinearGradient(0,0,0,H*0.30);
-    gT.addColorStop(0,'rgba('+t.overlayRgb+','+(0.52*op*2).toFixed(3)+')');
-    gT.addColorStop(0.6,'rgba('+t.overlayRgb+','+(0.12*op*2).toFixed(3)+')');
-    gT.addColorStop(1,'rgba('+t.overlayRgb+',0)');
-    ctx.fillStyle=gT; ctx.fillRect(0,0,W,H*0.30);
-    var vb=((veilBottom==null?0.60:veilBottom)*op*2);
-    vb=Math.min(vb,0.92);
-    var gB=ctx.createLinearGradient(0,H*0.46,0,H);
-    gB.addColorStop(0,'rgba('+t.overlayRgb+',0)');
-    gB.addColorStop(0.6,'rgba('+t.overlayRgb+','+(vb*0.3).toFixed(3)+')');
-    gB.addColorStop(1,'rgba('+t.overlayRgb+','+vb.toFixed(3)+')');
-    ctx.fillStyle=gB; ctx.fillRect(0,H*0.42,W,H*0.58);
-    c=txtPhoto(t);
-  } else if(cm==='dark'){
-    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',Math.max(0.15,0.62*op*2)); }
-    else solidBg(ctx,t);
-    c=photo?txtPhoto(t):txtSolid(t);
-  } else {
-    if(photo){
-      fullPhoto(ctx,state.image);
-      var la=Math.max(0.10,(0.55*op*2)); la=Math.min(la,0.90);
-      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-      c=txtPhoto(t);
-    } else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); c=txtSolid(t); }
-  }
-  c=textColors(c,t,state);
+  applyPhotoOverlay(ctx,state,t);
+  var c=textColors(hasPhoto(state)?txtPhoto(t):txtSolid(t), t, state);
   if(_showFrame){ ctx.save(); ctx.globalAlpha=0.30; ctx.strokeStyle=c.h; ctx.lineWidth=1.5;
     ctx.strokeRect(50,50,W-100,H-100); ctx.restore(); }
   fMasthead(ctx,c.h,'center',60,12,154,null);
@@ -499,38 +524,10 @@ function fCoverChrome(ctx, state, t, veilBottom){
   return c;
 }
 
-// CHROME MODERNA — respeta state.contrast + _overlayOpacity.
+// CHROME MODERNA — usa applyPhotoOverlay + textColors independiente.
 function fModernaChrome(ctx, state, t){
-  var photo=hasPhoto(state), cm=state.contrast||'light', c, op=_overlayOpacity;
-  if(cm==='overlay' && photo){
-    fullPhoto(ctx,state.image);
-    ctx.fillStyle='rgba('+t.overlayRgb+','+(0.06*op*2).toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-    c=fInk(t,state);
-    var lightText=(state.textColorMode==='white-accent');
-    var g=ctx.createLinearGradient(0,H*0.40,0,H);
-    if(lightText){
-      g.addColorStop(0,'rgba('+t.overlayRgb+',0)');
-      g.addColorStop(0.45,'rgba('+t.overlayRgb+','+(0.30*op*2).toFixed(3)+')');
-      g.addColorStop(1,'rgba('+t.overlayRgb+','+(0.62*op*2).toFixed(3)+')');
-    } else {
-      g.addColorStop(0,'rgba(247,245,240,0)');
-      g.addColorStop(0.45,'rgba(247,245,240,'+(0.48*op*2).toFixed(3)+')');
-      g.addColorStop(1,'rgba(247,245,240,'+(0.80*op*2).toFixed(3)+')');
-    }
-    ctx.fillStyle=g; ctx.fillRect(0,H*0.38,W,H*0.62);
-  } else if(cm==='dark'){
-    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',Math.max(0.15,0.62*op*2)); }
-    else solidBg(ctx,t);
-    c=photo?txtPhoto(t):txtSolid(t);
-  } else {
-    if(photo){
-      fullPhoto(ctx,state.image);
-      var la=Math.max(0.10,(0.55*op*2)); la=Math.min(la,0.90);
-      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-      c=fInk(t,state);
-    } else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); c={h:t.textPrimary,p:t.textSecondary,a:t.accent}; }
-  }
-  c=textColors(c,t,state);
+  applyPhotoOverlay(ctx,state,t);
+  var c=textColors(hasPhoto(state)?fInk(t,state):{h:t.textPrimary,p:t.textSecondary,a:t.accent}, t, state);
   fMasthead(ctx,c.h,'left',32,8,118,0.95);
   var dl=(state.eyebrow||'Bambuky · Querétaro').toUpperCase();
   ctx.save(); ctx.translate(W-68,H/2); ctx.rotate(-Math.PI/2);
@@ -541,26 +538,10 @@ function fModernaChrome(ctx, state, t){
   return c;
 }
 
-// CHROME MINIMA — respeta state.contrast + _overlayOpacity.
+// CHROME MINIMA — usa applyPhotoOverlay + textColors independiente.
 function fMinimaChrome(ctx, state, t){
-  var photo=hasPhoto(state), cm=state.contrast||'light', c, op=_overlayOpacity;
-  if(cm==='overlay' && photo){
-    fullPhoto(ctx,state.image);
-    ctx.fillStyle='rgba('+t.overlayRgb+','+(0.05*op*2).toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-    c=fInk(t,state);
-  } else if(cm==='dark'){
-    if(photo){ fullPhoto(ctx,state.image); overlay(ctx,t,'full',Math.max(0.15,0.55*op*2)); }
-    else solidBg(ctx,t);
-    c=photo?txtPhoto(t):txtSolid(t);
-  } else {
-    if(photo){
-      fullPhoto(ctx,state.image);
-      var la=Math.max(0.10,(0.55*op*2)); la=Math.min(la,0.90);
-      ctx.fillStyle='rgba('+t.overlayRgb+','+la.toFixed(3)+')'; ctx.fillRect(0,0,W,H);
-      c=fInk(t,state);
-    } else { ctx.fillStyle=t.bgLight||t.bg; ctx.fillRect(0,0,W,H); c={h:t.textPrimary,p:t.textSecondary,a:t.accent}; }
-  }
-  c=textColors(c,t,state);
+  applyPhotoOverlay(ctx,state,t);
+  var c=textColors(hasPhoto(state)?fInk(t,state):{h:t.textPrimary,p:t.textSecondary,a:t.accent}, t, state);
   fMasthead(ctx,c.h,'center',40,10,122,null);
   return c;
 }

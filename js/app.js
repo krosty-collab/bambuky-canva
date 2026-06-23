@@ -40,8 +40,9 @@ const contrastSelect = document.getElementById('contrastSelect');
 const textColorBtns = document.getElementById('textColorButtons');
 const modeSuggestion = document.getElementById('modeSuggestion');
 const resetFontScalesBtn = document.getElementById('resetFontScales');
-const overlayOpacitySlider = document.getElementById('overlayOpacity');
-const overlayOpacityValue = document.getElementById('overlayOpacityValue');
+const photoOverlayBtns = document.getElementById('photoOverlayBtns');
+const photoOverlayOpacitySlider = document.getElementById('photoOverlayOpacity');
+const photoOverlayOpacityValue = document.getElementById('photoOverlayOpacityValue');
 const textAlignBtns = document.getElementById('textAlignButtons');
 const frameCheck = document.getElementById('frameCheck');
 const textOffsetYSlider = document.getElementById('textOffsetY');
@@ -84,10 +85,13 @@ function setActiveTextColor(mode){
 function setContrastUI(contrast){
   if(contrastSelect) contrastSelect.value = contrast || 'light';
 }
-function setOverlayOpacityUI(val){
-  var v=Math.round((val==null?0.5:val)*100);
-  if(overlayOpacitySlider) overlayOpacitySlider.value=v;
-  if(overlayOpacityValue) overlayOpacityValue.textContent=v+'%';
+function setPhotoOverlayUI(mode, opacity){
+  if(photoOverlayBtns) photoOverlayBtns.querySelectorAll('.ov-btn').forEach(function(b){
+    b.classList.toggle('active', b.dataset.ov===(mode||'none'));
+  });
+  var v=Math.round((opacity==null?0.35:opacity)*100);
+  if(photoOverlayOpacitySlider) photoOverlayOpacitySlider.value=v;
+  if(photoOverlayOpacityValue) photoOverlayOpacityValue.textContent=v+'%';
 }
 function setActiveAlign(align){
   if(!textAlignBtns) return;
@@ -232,7 +236,7 @@ function loadSlideToUI(){
   populateVariantOptions(s.template, s.variant);
   populateModeOptions(s.template, s.mode);
   setContrastUI(s.contrast);
-  setOverlayOpacityUI(s.overlayOpacity);
+  setPhotoOverlayUI(s.photoOverlayMode, s.photoOverlayOpacity);
   setActiveTextColor(s.textColorMode || 'base-accent');
   setActiveAlign(s.textAlign);
   if(logoCheck) logoCheck.checked = (s.showLogo !== false);
@@ -308,7 +312,7 @@ function saveUIToSlide(){
   if(variantSelect && variantSelect.value) s.variant = variantSelect.value;
   s.mode = project.globalTheme || 'sage-garden';
   if(contrastSelect && contrastSelect.value) s.contrast = contrastSelect.value;
-  if(overlayOpacitySlider) s.overlayOpacity = Math.max(0, Math.min(1, Number(overlayOpacitySlider.value) / 100));
+  if(photoOverlayOpacitySlider) s.photoOverlayOpacity = Math.max(0, Math.min(1, Number(photoOverlayOpacitySlider.value) / 100));
   if(imageZoom) s.imageScale = Math.max(0.8, Math.min(2, Number(imageZoom.value) / 100 || 1));
   if(imageX) s.imageX = Math.max(-100, Math.min(100, Number(imageX.value) || 0));
   if(imageY) s.imageY = Math.max(-100, Math.min(100, Number(imageY.value) || 0));
@@ -391,10 +395,11 @@ function autoContrast(img){
   const s = project.slides[project.current];
   const stats = analyzePhoto(img);
   if(!stats){ if(modeSuggestion) modeSuggestion.textContent = ''; return; }
-  s.contrast = 'overlay';
-  setContrastUI(s.contrast);
+  s.photoOverlayMode = 'gradient-dark';
+  s.photoOverlayOpacity = 0.45;
+  setPhotoOverlayUI(s.photoOverlayMode, s.photoOverlayOpacity);
   if(modeSuggestion){
-    modeSuggestion.innerHTML = `Contraste ajustado a <span class="sg-strong">Overlay</span> (foto detectada). Puedes cambiarlo.`;
+    modeSuggestion.innerHTML = `Overlay ajustado a <span class="sg-strong">Degradé Dark 45%</span> (foto detectada). Puedes cambiarlo.`;
   }
 }
 
@@ -420,9 +425,18 @@ if(templateSelect) templateSelect.addEventListener('change', ()=>{
 // Cambio de variante o contraste (per-slide)
 if(variantSelect) variantSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
 if(contrastSelect) contrastSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
-if(overlayOpacitySlider) overlayOpacitySlider.addEventListener('input', ()=>{
-  if(overlayOpacityValue) overlayOpacityValue.textContent=overlayOpacitySlider.value+'%';
-  saveUIToSlide(); render();
+if(photoOverlayBtns) photoOverlayBtns.addEventListener('click', function(e){
+  var btn=e.target.closest('.ov-btn'); if(!btn) return;
+  var mode=btn.dataset.ov;
+  project.slides[project.current].photoOverlayMode=mode;
+  setPhotoOverlayUI(mode, project.slides[project.current].photoOverlayOpacity);
+  render();
+});
+if(photoOverlayOpacitySlider) photoOverlayOpacitySlider.addEventListener('input', function(){
+  var v=Number(photoOverlayOpacitySlider.value)/100;
+  project.slides[project.current].photoOverlayOpacity=v;
+  if(photoOverlayOpacityValue) photoOverlayOpacityValue.textContent=Math.round(v*100)+'%';
+  render();
 });
 if(textAlignBtns) textAlignBtns.addEventListener('click', function(e){
   var btn=e.target.closest('.align-btn'); if(!btn) return;
