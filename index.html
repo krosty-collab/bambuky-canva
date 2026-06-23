@@ -121,6 +121,22 @@
           </div>
         </section>
 
+        <!-- 4c · ALINEACIÓN DE TEXTO (por slide) -->
+        <section class="panel">
+          <label>Alineación del texto <span class="opt">(este slide)</span></label>
+          <div id="textAlignButtons" class="align-btns">
+            <button type="button" class="align-btn" data-align="left" title="Izquierda">
+              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="0" y="4" width="11" height="2" fill="currentColor"/><rect x="0" y="8" width="14" height="2" fill="currentColor"/><rect x="0" y="12" width="9" height="2" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="align-btn" data-align="center" title="Centro">
+              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="2.5" y="4" width="11" height="2" fill="currentColor"/><rect x="1" y="8" width="14" height="2" fill="currentColor"/><rect x="3.5" y="12" width="9" height="2" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="align-btn" data-align="right" title="Derecha">
+              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="5" y="4" width="11" height="2" fill="currentColor"/><rect x="2" y="8" width="14" height="2" fill="currentColor"/><rect x="7" y="12" width="9" height="2" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </section>
+
         <!-- 5 · SUBIR IMAGEN -->
         <section class="panel">
           <h2><span class="step">5</span> Subir imagen</h2>
@@ -147,6 +163,8 @@
             <option value="dark">Dark</option>
             <option value="overlay">Overlay</option>
           </select>
+          <label style="margin-top:10px">Opacidad del overlay <span id="overlayOpacityValue">50%</span></label>
+          <input id="overlayOpacity" type="range" min="0" max="100" value="50" />
           <div id="modeSuggestion" class="mode-suggestion"></div>
         </section>
 

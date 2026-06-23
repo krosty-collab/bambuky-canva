@@ -40,6 +40,9 @@ const contrastSelect = document.getElementById('contrastSelect');
 const textColorBtns = document.getElementById('textColorButtons');
 const modeSuggestion = document.getElementById('modeSuggestion');
 const resetFontScalesBtn = document.getElementById('resetFontScales');
+const overlayOpacitySlider = document.getElementById('overlayOpacity');
+const overlayOpacityValue = document.getElementById('overlayOpacityValue');
+const textAlignBtns = document.getElementById('textAlignButtons');
 
 // Rellena los selects de variante y modo según la plantilla activa.
 let _showLegacy = false;
@@ -77,6 +80,17 @@ function setActiveTextColor(mode){
 }
 function setContrastUI(contrast){
   if(contrastSelect) contrastSelect.value = contrast || 'light';
+}
+function setOverlayOpacityUI(val){
+  var v=Math.round((val==null?0.5:val)*100);
+  if(overlayOpacitySlider) overlayOpacitySlider.value=v;
+  if(overlayOpacityValue) overlayOpacityValue.textContent=v+'%';
+}
+function setActiveAlign(align){
+  if(!textAlignBtns) return;
+  textAlignBtns.querySelectorAll('.align-btn').forEach(function(b){
+    b.classList.toggle('active',b.dataset.align===(align||'left'));
+  });
 }
 function applyGlobalTheme(themeId){
   project.globalTheme = themeId;
@@ -215,7 +229,9 @@ function loadSlideToUI(){
   populateVariantOptions(s.template, s.variant);
   populateModeOptions(s.template, s.mode);
   setContrastUI(s.contrast);
+  setOverlayOpacityUI(s.overlayOpacity);
   setActiveTextColor(s.textColorMode || 'base-accent');
+  setActiveAlign(s.textAlign);
   if(logoCheck) logoCheck.checked = (s.showLogo !== false);
   if(modeSuggestion) modeSuggestion.textContent = '';
   updateFieldVisibility(s.template);
@@ -286,6 +302,7 @@ function saveUIToSlide(){
   if(variantSelect && variantSelect.value) s.variant = variantSelect.value;
   s.mode = project.globalTheme || 'sage-garden';
   if(contrastSelect && contrastSelect.value) s.contrast = contrastSelect.value;
+  if(overlayOpacitySlider) s.overlayOpacity = Math.max(0, Math.min(1, Number(overlayOpacitySlider.value) / 100));
   if(imageZoom) s.imageScale = Math.max(0.8, Math.min(2, Number(imageZoom.value) / 100 || 1));
   if(imageX) s.imageX = Math.max(-100, Math.min(100, Number(imageX.value) || 0));
   if(imageY) s.imageY = Math.max(-100, Math.min(100, Number(imageY.value) || 0));
@@ -397,6 +414,16 @@ if(templateSelect) templateSelect.addEventListener('change', ()=>{
 // Cambio de variante o contraste (per-slide)
 if(variantSelect) variantSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
 if(contrastSelect) contrastSelect.addEventListener('change', ()=>{ saveUIToSlide(); render(); });
+if(overlayOpacitySlider) overlayOpacitySlider.addEventListener('input', ()=>{
+  if(overlayOpacityValue) overlayOpacityValue.textContent=overlayOpacitySlider.value+'%';
+  saveUIToSlide(); render();
+});
+if(textAlignBtns) textAlignBtns.addEventListener('click', function(e){
+  var btn=e.target.closest('.align-btn'); if(!btn) return;
+  project.slides[project.current].textAlign=btn.dataset.align;
+  setActiveAlign(btn.dataset.align);
+  render();
+});
 // Color de texto por slide (botones visuales)
 if(textColorBtns) textColorBtns.addEventListener('click', (e)=>{
   const btn = e.target.closest('.tcm-btn'); if(!btn) return;
