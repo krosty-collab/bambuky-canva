@@ -49,22 +49,17 @@ const textOffsetYSlider = document.getElementById('textOffsetY');
 const textOffsetYValue = document.getElementById('textOffsetYValue');
 
 // Rellena los selects de variante y modo según la plantilla activa.
-let _showLegacy = false;
 function populateVariantOptions(tpl, current){
   if(!variantSelect) return;
   const list = (window.VARIANTS && window.VARIANTS[tpl]) || [];
   variantSelect.innerHTML = '';
-  const hasLegacy = list.some(v => v.legacy);
   list.forEach(v=>{
-    if(v.hidden) return;
-    if(v.legacy && !_showLegacy) return;
+    if(v.hidden || v.legacy) return;
     const o = document.createElement('option');
     o.value = v.id;
-    o.textContent = v.legacy ? '⚬ ' + v.label : v.label;
+    o.textContent = v.label;
     variantSelect.appendChild(o);
   });
-  const legacyToggle = document.getElementById('legacyToggle');
-  if(legacyToggle) legacyToggle.style.display = hasLegacy ? '' : 'none';
   variantSelect.value = window.normalizeVariant ? window.normalizeVariant(tpl, current) : (list[0] && list[0].id);
 }
 function populateModeOptions(tpl, current){
@@ -615,12 +610,13 @@ if(textOffsetYSlider) textOffsetYSlider.addEventListener('input', ()=>{
 });
 
 // Legacy/experimental variants toggle
-const legacyCheck = document.getElementById('legacyCheck');
-if(legacyCheck) legacyCheck.addEventListener('change', ()=>{
-  _showLegacy = legacyCheck.checked;
-  const s = project.slides[project.current];
-  populateVariantOptions(s.template, s.variant);
-  render();
+// Collapsible AI panel
+const aiHeader = document.getElementById('aiHeader');
+const aiPanel = document.getElementById('aiPanel');
+if(aiHeader) aiHeader.addEventListener('click', ()=>{
+  const open = aiPanel.style.display !== 'none';
+  aiPanel.style.display = open ? 'none' : '';
+  aiHeader.classList.toggle('open', !open);
 });
 
 // palette controls removed in production mode
@@ -809,7 +805,6 @@ const promptTopic = document.getElementById('promptTopic');
 const promptGoal = document.getElementById('promptGoal');
 const promptAudience = document.getElementById('promptAudience');
 const copyPromptClaude = document.getElementById('copyPromptClaude');
-const copyPromptOptimize = document.getElementById('copyPromptOptimize');
 const promptMessage = document.getElementById('promptMessage');
 
 function buildClaudePrompt(){
@@ -900,21 +895,6 @@ ESTRUCTURA EXACTA DEL JSON
 Devuelve solo el JSON.`;
 }
 
-function buildOptimizePrompt(){
-  return `Te voy a pegar un JSON de Bambuky Content Studio. Regrésame el mismo JSON válido, sin markdown, optimizando títulos y textos para legibilidad móvil en Instagram. No cambies templates ni estructura. Reduce texto, mejora titulares, conserva voz Bambuky.
-
-REGLAS:
-- Responde ÚNICAMENTE con JSON válido. Sin markdown, sin explicaciones.
-- Conserva exactamente los mismos templates, variant, mode y las mismas llaves de cada slide.
-- Respeta los límites de diseño: eyebrow ≤ 5 palabras, title ≤ 9, subtitle ≤ 12, body ≤ 3 líneas (≈18 palabras), cta ≤ 5, credenciales ≤ 6 palabras c/u.
-- Máximo 30 palabras visibles por slide (eyebrow + title + subtitle + body); prioriza titulares cortos y potentes.
-- Mantén la voz Bambuky: cálida, humana, tranquila y experta.
-- Conserva el SEO local (Querétaro / fotografía newborn Querétaro) y el caption/hashtags si ya estaban.
-
-JSON a optimizar:
-`;
-}
-
 function flashPromptMessage(msg){
   if(!promptMessage) return;
   promptMessage.textContent = msg;
@@ -943,11 +923,6 @@ if(copyPromptClaude) copyPromptClaude.addEventListener('click', async ()=>{
   const ok = await copyToClipboard(buildClaudePrompt());
   flashPromptMessage(ok ? 'Prompt copiado' : 'No se pudo copiar (copia manual)');
 });
-if(copyPromptOptimize) copyPromptOptimize.addEventListener('click', async ()=>{
-  const ok = await copyToClipboard(buildOptimizePrompt());
-  flashPromptMessage(ok ? 'Prompt de optimización copiado' : 'No se pudo copiar (copia manual)');
-});
-
 importApply && importApply.addEventListener('click', ()=>{
   const raw = importTextarea.value.trim(); if(!raw){ showImportMessage('Pega un JSON válido antes de importar.'); return; }
   try{

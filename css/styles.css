@@ -103,6 +103,12 @@ canvas{display:block;max-width:100%;height:auto;border-radius:6px;box-shadow:0 1
 .field-group:last-of-type{margin-bottom:6px}
 .word-counter{margin-top:6px;font-size:12px;color:var(--text-muted)}
 
+/* ===== Secciones colapsables ===== */
+.collapsible-header{cursor:pointer;user-select:none}
+.collapsible-header:hover{opacity:0.8}
+.collapse-arrow{font-size:11px;margin-left:4px;transition:transform .15s}
+.collapsible-header.open .collapse-arrow{transform:rotate(180deg)}
+
 /* Botones secundarios (outline) y de peligro fantasma */
 .panel .btn-secondary{background:#fff;color:var(--sage-3);border:1px solid rgba(91,115,107,0.3);font-weight:600}
 .panel .btn-secondary:hover{background:var(--sage-1)}

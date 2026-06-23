@@ -16,133 +16,16 @@
           <h1>Bambuky Content Studio</h1>
         </header>
 
-        <!-- 0 · TEMA GLOBAL -->
+        <!-- SLIDES (lo primero: navegar entre slides) -->
         <section class="panel">
-          <h2><span class="step">&bull;</span> Tema del carrusel</h2>
-          <p class="panel-hint">Se aplica a todas las slides. El modo de contraste se elige por slide.</p>
-          <div id="themeSwatchesGlobal" class="theme-btns" style="margin-top:4px">
-            <button type="button" class="theme-btn" data-theme="heritage-blue" title="Heritage Blue">Azul</button>
-            <button type="button" class="theme-btn" data-theme="sage-garden" title="Sage Garden">Verde</button>
-            <button type="button" class="theme-btn" data-theme="blush-editorial" title="Blush Editorial">Rosa</button>
-          </div>
-          <label style="margin-top:12px">Tipografía</label>
-          <select id="fontPresetSelect">
-            <option value="editorial-bambuky">Editorial Bambuky</option>
-            <option value="revista-clasica">Revista Clásica</option>
-            <option value="lujo-suave">Lujo Suave</option>
-            <option value="moderno-premium">Moderno Premium</option>
-            <option value="minimal-gallery">Minimal Gallery</option>
-          </select>
-          <div id="fontPreview" class="font-preview"></div>
-          <label class="legacy-toggle" style="margin-top:6px"><input type="checkbox" id="fontAdvancedCheck" /> Personalizar fuentes</label>
-          <div id="fontAdvancedPanel" class="font-advanced" style="display:none">
-            <label>Eyebrow / UI</label>
-            <select id="fontSelBody" class="font-sel"></select>
-            <label>Título</label>
-            <select id="fontSelTitle" class="font-sel"></select>
-            <label>Subtítulo</label>
-            <select id="fontSelSubtitle" class="font-sel"></select>
-            <label>Botón / CTA</label>
-            <select id="fontSelCta" class="font-sel"></select>
-          </div>
-        </section>
-
-        <!-- 1 · GUÍA ASISTIDA PARA CLAUDE -->
-        <section class="panel">
-          <h2><span class="step">1</span> Guía asistida para Claude</h2>
-          <p class="panel-hint">El punto de partida: genera el prompt, pídeselo a Claude y trae el JSON.</p>
-          <label>Tema del carrusel</label>
-          <textarea id="promptTopic" rows="2" placeholder="Ej: Cuándo reservar una sesión newborn"></textarea>
-          <label>Objetivo del carrusel</label>
-          <textarea id="promptGoal" rows="2" placeholder="Ej: Que reserven antes de los 15 días por DM"></textarea>
-          <label>Público <span class="opt">(opcional)</span></label>
-          <textarea id="promptAudience" rows="2" placeholder="Ej: Mamás primerizas embarazadas en Querétaro"></textarea>
-          <div class="btn-stack">
-            <button id="copyPromptClaude">Copiar prompt para Claude</button>
-            <button id="copyPromptOptimize" class="btn-secondary">Copiar prompt para optimizar JSON</button>
-          </div>
-          <div id="promptMessage" class="msg-ok"></div>
-        </section>
-
-        <!-- 2 · IMPORTAR JSON -->
-        <section class="panel">
-          <h2><span class="step">2</span> Importar JSON</h2>
-          <p class="panel-hint">Pega el JSON que te dio Claude y se arma el carrusel.</p>
-          <textarea id="importTextarea" rows="6" placeholder='[ { "template":"portada","title":"..." } ]'></textarea>
-          <div class="btn-stack">
-            <button id="importApply">Importar JSON</button>
-          </div>
-          <div id="importMessage" class="msg-err"></div>
-          <div id="captionRow" class="btn-stack" style="display:none;margin-top:8px">
-            <button id="copyCaption" class="btn-secondary">Copiar caption para Instagram</button>
-          </div>
-          <div id="captionMessage" class="msg-ok"></div>
-        </section>
-
-        <!-- 3 · SLIDES -->
-        <section class="panel">
-          <h2><span class="step">3</span> Slides</h2>
+          <h2><span class="step">1</span> Slides</h2>
           <div id="slidesList" class="slides-list"></div>
           <button id="addSlide" class="btn-secondary">Añadir slide</button>
         </section>
 
-        <!-- 4 · PLANTILLA DEL SLIDE -->
+        <!-- IMAGEN + OVERLAY (lo segundo: subir foto y ajustar) -->
         <section class="panel">
-          <h2><span class="step">4</span> Plantilla del slide</h2>
-          <p class="panel-hint">Normalmente la define el JSON. Cámbiala solo si hace falta.</p>
-          <label>Template</label>
-          <select id="templateSelect"></select>
-          <label style="margin-top:10px">Variante</label>
-          <select id="variantSelect"></select>
-          <label id="legacyToggle" class="legacy-toggle" style="display:none"><input type="checkbox" id="legacyCheck" /> Mostrar experimentales</label>
-          <label class="logo-toggle" style="margin-top:10px"><input type="checkbox" id="logoCheck" checked /> Mostrar logo BAMBUKY</label>
-          <label class="logo-toggle" style="margin-top:6px"><input type="checkbox" id="frameCheck" checked /> Mostrar marco interior</label>
-          <label style="margin-top:10px">Posición del texto <span id="textOffsetYValue">0</span></label>
-          <input id="textOffsetY" type="range" min="-200" max="200" value="0" />
-        </section>
-
-        <!-- 4b · COLOR DE TEXTO (por slide) -->
-        <section class="panel">
-          <label>Color del texto <span class="opt">(este slide)</span></label>
-          <div id="textColorButtons" class="tcm-btns">
-            <button type="button" class="tcm-btn" data-tcm="base-accent" title="Base + Acento">
-              <span class="tcm-preview tcm-base"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
-              <span class="tcm-label">Base</span>
-            </button>
-            <button type="button" class="tcm-btn" data-tcm="white-accent" title="Blanco + Acento">
-              <span class="tcm-preview tcm-white"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
-              <span class="tcm-label">Blanco</span>
-            </button>
-            <button type="button" class="tcm-btn" data-tcm="accent-white" title="Acento + Blanco">
-              <span class="tcm-preview tcm-accent"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
-              <span class="tcm-label">Acento</span>
-            </button>
-            <button type="button" class="tcm-btn" data-tcm="dark-accent" title="Oscuro + Acento">
-              <span class="tcm-preview tcm-dark"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
-              <span class="tcm-label">Oscuro</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- 4c · ALINEACIÓN DE TEXTO (por slide) -->
-        <section class="panel">
-          <label>Alineación del texto <span class="opt">(este slide)</span></label>
-          <div id="textAlignButtons" class="align-btns">
-            <button type="button" class="align-btn" data-align="left" title="Izquierda">
-              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="0" y="4" width="11" height="2" fill="currentColor"/><rect x="0" y="8" width="14" height="2" fill="currentColor"/><rect x="0" y="12" width="9" height="2" fill="currentColor"/></svg>
-            </button>
-            <button type="button" class="align-btn" data-align="center" title="Centro">
-              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="2.5" y="4" width="11" height="2" fill="currentColor"/><rect x="1" y="8" width="14" height="2" fill="currentColor"/><rect x="3.5" y="12" width="9" height="2" fill="currentColor"/></svg>
-            </button>
-            <button type="button" class="align-btn" data-align="right" title="Derecha">
-              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="5" y="4" width="11" height="2" fill="currentColor"/><rect x="2" y="8" width="14" height="2" fill="currentColor"/><rect x="7" y="12" width="9" height="2" fill="currentColor"/></svg>
-            </button>
-          </div>
-        </section>
-
-        <!-- 5 · SUBIR IMAGEN -->
-        <section class="panel">
-          <h2><span class="step">5</span> Subir imagen</h2>
+          <h2><span class="step">2</span> Imagen</h2>
           <input id="imgUpload" type="file" accept="image/*" />
           <div id="imgFileRow" class="img-file-row" style="display:none">
             <span id="imgFileName" class="img-file-name"></span>
@@ -151,16 +34,13 @@
           <div id="imageFrameControls" class="image-frame-controls" style="display:none">
             <label for="imageZoom">Zoom <span id="imageZoomValue">100%</span></label>
             <input id="imageZoom" type="range" min="80" max="200" value="100" />
-
             <label for="imageX">Horizontal <span id="imageXValue">0</span></label>
             <input id="imageX" type="range" min="-100" max="100" value="0" />
-
             <label for="imageY">Vertical <span id="imageYValue">0</span></label>
             <input id="imageY" type="range" min="-100" max="100" value="0" />
-
             <button id="imageFrameReset" class="btn-secondary" type="button">Restablecer encuadre</button>
           </div>
-          <label style="margin-top:12px">Overlay fotográfico <span class="opt">(este slide)</span></label>
+          <label style="margin-top:12px">Overlay fotográfico</label>
           <div id="photoOverlayBtns" class="ov-btns">
             <button type="button" class="ov-btn" data-ov="none" title="Sin overlay">Ninguno</button>
             <button type="button" class="ov-btn" data-ov="dark" title="Oscuro sólido">Dark</button>
@@ -168,14 +48,14 @@
             <button type="button" class="ov-btn" data-ov="gradient-dark" title="Degradado oscuro">Deg. Dark</button>
             <button type="button" class="ov-btn" data-ov="gradient-light" title="Degradado claro">Deg. Light</button>
           </div>
-          <label style="margin-top:10px">Intensidad <span id="photoOverlayOpacityValue">35%</span></label>
+          <label style="margin-top:8px">Intensidad <span id="photoOverlayOpacityValue">35%</span></label>
           <input id="photoOverlayOpacity" type="range" min="0" max="100" value="35" />
           <div id="modeSuggestion" class="mode-suggestion"></div>
         </section>
 
-        <!-- 6 · CONTENIDO EDITABLE -->
+        <!-- CONTENIDO EDITABLE (lo tercero: escribir textos) -->
         <section class="panel form-fields">
-          <h2><span class="step">6</span> Contenido editable</h2>
+          <h2><span class="step">3</span> Contenido</h2>
           <div class="field-group" id="grp-eyebrow">
             <label>Eyebrow <span class="font-scale" data-scale="fontScaleEyebrow"><button type="button" class="fs-btn fs-dec">−</button><span class="fs-val">100%</span><button type="button" class="fs-btn fs-inc">+</button></span></label>
             <input id="fieldEyebrow" placeholder="Ej: Fotografía Newborn Querétaro" />
@@ -205,19 +85,127 @@
             <input id="fieldCta" placeholder="Ej: Escríbenos por DM" />
           </div>
           <button id="resetFontScales" class="btn-secondary" type="button" style="margin-top:6px;width:100%">Restablecer tamaños</button>
-          <div id="wordCounter" class="word-counter">0 / 30 palabras visibles</div>
+          <div id="wordCounter" class="word-counter">0 / 30 palabras</div>
           <div class="panel-hint">Máximo 30 palabras por slide: título + subtítulo + texto. El eyebrow no cuenta.</div>
         </section>
 
-        <!-- 7 · EXPORTAR -->
+        <!-- ESTILO DEL SLIDE (controles visuales por slide) -->
+        <section class="panel">
+          <h2><span class="step">4</span> Estilo del slide</h2>
+          <label>Template</label>
+          <select id="templateSelect"></select>
+          <label style="margin-top:8px">Variante</label>
+          <select id="variantSelect"></select>
+
+          <label style="margin-top:10px">Color del texto</label>
+          <div id="textColorButtons" class="tcm-btns">
+            <button type="button" class="tcm-btn" data-tcm="base-accent" title="Base + Acento">
+              <span class="tcm-preview tcm-base"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Base</span>
+            </button>
+            <button type="button" class="tcm-btn" data-tcm="white-accent" title="Blanco + Acento">
+              <span class="tcm-preview tcm-white"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Blanco</span>
+            </button>
+            <button type="button" class="tcm-btn" data-tcm="accent-white" title="Acento + Blanco">
+              <span class="tcm-preview tcm-accent"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Acento</span>
+            </button>
+            <button type="button" class="tcm-btn" data-tcm="dark-accent" title="Oscuro + Acento">
+              <span class="tcm-preview tcm-dark"><span class="tcm-letter">A</span><span class="tcm-bar"></span></span>
+              <span class="tcm-label">Oscuro</span>
+            </button>
+          </div>
+
+          <label style="margin-top:10px">Alineación</label>
+          <div id="textAlignButtons" class="align-btns">
+            <button type="button" class="align-btn" data-align="left" title="Izquierda">
+              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="0" y="4" width="11" height="2" fill="currentColor"/><rect x="0" y="8" width="14" height="2" fill="currentColor"/><rect x="0" y="12" width="9" height="2" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="align-btn" data-align="center" title="Centro">
+              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="2.5" y="4" width="11" height="2" fill="currentColor"/><rect x="1" y="8" width="14" height="2" fill="currentColor"/><rect x="3.5" y="12" width="9" height="2" fill="currentColor"/></svg>
+            </button>
+            <button type="button" class="align-btn" data-align="right" title="Derecha">
+              <svg width="16" height="14" viewBox="0 0 16 14"><rect x="0" y="0" width="16" height="2" fill="currentColor"/><rect x="5" y="4" width="11" height="2" fill="currentColor"/><rect x="2" y="8" width="14" height="2" fill="currentColor"/><rect x="7" y="12" width="9" height="2" fill="currentColor"/></svg>
+            </button>
+          </div>
+
+          <label style="margin-top:10px">Posición del texto <span id="textOffsetYValue">0</span></label>
+          <input id="textOffsetY" type="range" min="-200" max="200" value="0" />
+
+          <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">
+            <label class="logo-toggle"><input type="checkbox" id="logoCheck" checked /> Mostrar logo BAMBUKY</label>
+            <label class="logo-toggle"><input type="checkbox" id="frameCheck" checked /> Mostrar marco interior</label>
+          </div>
+        </section>
+
+        <!-- TEMA GLOBAL (se cambia poco, va abajo) -->
+        <section class="panel">
+          <h2><span class="step">5</span> Tema global</h2>
+          <p class="panel-hint">Se aplica a todas las slides.</p>
+          <div id="themeSwatchesGlobal" class="theme-btns" style="margin-top:4px">
+            <button type="button" class="theme-btn" data-theme="heritage-blue" title="Heritage Blue">Azul</button>
+            <button type="button" class="theme-btn" data-theme="sage-garden" title="Sage Garden">Verde</button>
+            <button type="button" class="theme-btn" data-theme="blush-editorial" title="Blush Editorial">Rosa</button>
+          </div>
+          <label style="margin-top:10px">Tipografía</label>
+          <select id="fontPresetSelect">
+            <option value="editorial-bambuky">Editorial Bambuky</option>
+            <option value="revista-clasica">Revista Clásica</option>
+            <option value="lujo-suave">Lujo Suave</option>
+            <option value="moderno-premium">Moderno Premium</option>
+            <option value="minimal-gallery">Minimal Gallery</option>
+          </select>
+          <div id="fontPreview" class="font-preview"></div>
+          <label class="legacy-toggle" style="margin-top:6px"><input type="checkbox" id="fontAdvancedCheck" /> Personalizar fuentes</label>
+          <div id="fontAdvancedPanel" class="font-advanced" style="display:none">
+            <label>Eyebrow / UI</label>
+            <select id="fontSelBody" class="font-sel"></select>
+            <label>Título</label>
+            <select id="fontSelTitle" class="font-sel"></select>
+            <label>Subtítulo</label>
+            <select id="fontSelSubtitle" class="font-sel"></select>
+            <label>Botón / CTA</label>
+            <select id="fontSelCta" class="font-sel"></select>
+          </div>
+        </section>
+
+        <!-- EXPORTAR -->
         <section class="panel actions">
-          <h2><span class="step">7</span> Exportar</h2>
-          <p class="panel-hint">La exportación principal está arriba a la derecha. Aquí quedan como acceso secundario.</p>
+          <h2><span class="step">6</span> Exportar</h2>
           <label>Nombre del carrusel</label>
           <input id="projectName" placeholder="Nombre del carrusel" />
           <div class="btn-stack" style="margin-top:10px">
             <button id="exportSlide" class="btn-secondary">Exportar Slide (JPG)</button>
             <button id="exportCarousel" class="btn-secondary">Exportar Carrusel (ZIP)</button>
+          </div>
+        </section>
+
+        <!-- GENERAR CON IA (colapsable, se usa una vez) -->
+        <section class="panel">
+          <h2 class="collapsible-header" id="aiHeader"><span class="step">IA</span> Generar con Claude <span class="collapse-arrow">▾</span></h2>
+          <div id="aiPanel" class="collapsible-body" style="display:none">
+            <p class="panel-hint">Genera el prompt, cópialo a Claude y pega el JSON resultante.</p>
+            <label>Tema del carrusel</label>
+            <textarea id="promptTopic" rows="2" placeholder="Ej: Cuándo reservar una sesión newborn"></textarea>
+            <label>Objetivo del carrusel</label>
+            <textarea id="promptGoal" rows="2" placeholder="Ej: Que reserven antes de los 15 días por DM"></textarea>
+            <label>Público <span class="opt">(opcional)</span></label>
+            <textarea id="promptAudience" rows="2" placeholder="Ej: Mamás primerizas embarazadas en Querétaro"></textarea>
+            <div class="btn-stack">
+              <button id="copyPromptClaude">Copiar prompt para Claude</button>
+            </div>
+            <div id="promptMessage" class="msg-ok"></div>
+            <label style="margin-top:12px">Importar JSON</label>
+            <textarea id="importTextarea" rows="6" placeholder='[ { "template":"portada","title":"..." } ]'></textarea>
+            <div class="btn-stack">
+              <button id="importApply">Importar JSON</button>
+            </div>
+            <div id="importMessage" class="msg-err"></div>
+            <div id="captionRow" class="btn-stack" style="display:none;margin-top:8px">
+              <button id="copyCaption" class="btn-secondary">Copiar caption para Instagram</button>
+            </div>
+            <div id="captionMessage" class="msg-ok"></div>
           </div>
         </section>
       </aside>
