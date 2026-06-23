@@ -45,6 +45,11 @@ const photoOverlayOpacitySlider = document.getElementById('photoOverlayOpacity')
 const photoOverlayOpacityValue = document.getElementById('photoOverlayOpacityValue');
 const textAlignBtns = document.getElementById('textAlignButtons');
 const frameCheck = document.getElementById('frameCheck');
+const eyebrowCheck = document.getElementById('eyebrowCheck');
+const frameToggleRow = document.getElementById('frameToggleRow');
+const eyebrowToggleRow = document.getElementById('eyebrowToggleRow');
+const textOffsetXSlider = document.getElementById('textOffsetX');
+const textOffsetXValue = document.getElementById('textOffsetXValue');
 const textOffsetYSlider = document.getElementById('textOffsetY');
 const textOffsetYValue = document.getElementById('textOffsetYValue');
 
@@ -236,8 +241,15 @@ function loadSlideToUI(){
   setActiveAlign(s.textAlign);
   if(logoCheck) logoCheck.checked = (s.showLogo !== false);
   if(frameCheck) frameCheck.checked = (s.showFrame !== false);
+  if(eyebrowCheck) eyebrowCheck.checked = (s.showEyebrow !== false);
   if(textOffsetYSlider){ textOffsetYSlider.value = s.textOffsetY || 0; }
   if(textOffsetYValue) textOffsetYValue.textContent = s.textOffsetY || 0;
+  if(textOffsetXSlider){ textOffsetXSlider.value = s.textOffsetX || 0; }
+  if(textOffsetXValue) textOffsetXValue.textContent = s.textOffsetX || 0;
+  var v = s.variant || 'cover';
+  if(frameToggleRow) frameToggleRow.style.display = (v==='cover') ? '' : 'none';
+  var fields = TEMPLATE_FIELDS[s.template] || [];
+  if(eyebrowToggleRow) eyebrowToggleRow.style.display = fields.includes('eyebrow') ? '' : 'none';
   if(modeSuggestion) modeSuggestion.textContent = '';
   updateFieldVisibility(s.template);
   updateImageUI();
@@ -602,10 +614,20 @@ if(frameCheck) frameCheck.addEventListener('change', ()=>{
   project.slides[project.current].showFrame = frameCheck.checked;
   render();
 });
+if(eyebrowCheck) eyebrowCheck.addEventListener('change', ()=>{
+  project.slides[project.current].showEyebrow = eyebrowCheck.checked;
+  render();
+});
 if(textOffsetYSlider) textOffsetYSlider.addEventListener('input', ()=>{
   var v = Number(textOffsetYSlider.value) || 0;
   project.slides[project.current].textOffsetY = v;
   if(textOffsetYValue) textOffsetYValue.textContent = v;
+  render();
+});
+if(textOffsetXSlider) textOffsetXSlider.addEventListener('input', ()=>{
+  var v = Number(textOffsetXSlider.value) || 0;
+  project.slides[project.current].textOffsetX = v;
+  if(textOffsetXValue) textOffsetXValue.textContent = v;
   render();
 });
 

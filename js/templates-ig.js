@@ -283,16 +283,18 @@ var _ovMode='none';
 var _ovOpacity=0.35;
 var _textAlign='left';
 var _showFrame=true;
+var _showEyebrow=true;
+var _textOffsetX=0;
 var _textOffsetY=0;
 
 // Helpers for text alignment and vertical offset.
 // tp.y(base) applies the user's vertical offset to any Y coordinate.
 function tPos(){
-  var oy=_textOffsetY;
+  var ox=_textOffsetX, oy=_textOffsetY;
   function yf(base){ return base+oy; }
-  if(_textAlign==='center') return {x:W/2, align:'center', maxW:W-SX*2, y:yf};
-  if(_textAlign==='right') return {x:W-SX, align:'right', maxW:W-SX*2, y:yf};
-  return {x:SX, align:'left', maxW:W-SX*2, y:yf};
+  if(_textAlign==='center') return {x:W/2+ox, align:'center', maxW:W-SX*2, y:yf};
+  if(_textAlign==='right') return {x:W-SX+ox, align:'right', maxW:W-SX*2, y:yf};
+  return {x:SX+ox, align:'left', maxW:W-SX*2, y:yf};
 }
 function setScales(state){
   _scales={
@@ -304,9 +306,11 @@ function setScales(state){
   };
   _showLogo=(state.showLogo!==false);
   _showFrame=(state.showFrame!==false);
+  _showEyebrow=(state.showEyebrow!==false);
   _ovMode=state.photoOverlayMode||'none';
   _ovOpacity=(state.photoOverlayOpacity!=null)?state.photoOverlayOpacity:0.35;
   _textAlign=state.textAlign||'left';
+  _textOffsetX=Number(state.textOffsetX)||0;
   _textOffsetY=Number(state.textOffsetY)||0;
 }
 
@@ -369,7 +373,7 @@ function fotograma(ctx, state, color){
 }
 
 function eb(ctx, text, x, y, color, align){
-  if(!text) return y;
+  if(!text || !_showEyebrow) return y;
   align=align||'left';
   var fs=Math.round(16*_scales.eyebrow);
   ctx.save();
@@ -512,15 +516,17 @@ function fCoverChrome(ctx, state, t, veilBottom){
   if(_showFrame){ ctx.save(); ctx.globalAlpha=0.30; ctx.strokeStyle=c.h; ctx.lineWidth=1.5;
     ctx.strokeRect(50,50,W-100,H-100); ctx.restore(); }
   fMasthead(ctx,c.h,'center',60,12,154,null);
-  var dl=(state.eyebrow||'Fotografía Newborn · Querétaro').toUpperCase();
-  ctx.save(); ctx.font='500 14px '+FONT_BODY;
-  if('letterSpacing' in ctx) ctx.letterSpacing='5px';
-  ctx.fillStyle=c.h; ctx.globalAlpha=0.88; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.fillText(dl,W/2,198);
-  var dlW=ctx.measureText(dl).width; ctx.restore();
-  ctx.save(); ctx.globalAlpha=0.5; ctx.fillStyle=c.h;
-  if(W/2-dlW/2-66>40){ ctx.fillRect(W/2-dlW/2-66,192,40,1.5); ctx.fillRect(W/2+dlW/2+26,192,40,1.5); }
-  ctx.restore();
+  if(_showEyebrow){
+    var dl=(state.eyebrow||'Fotografía Newborn · Querétaro').toUpperCase();
+    ctx.save(); ctx.font='500 14px '+FONT_BODY;
+    if('letterSpacing' in ctx) ctx.letterSpacing='5px';
+    ctx.fillStyle=c.h; ctx.globalAlpha=0.88; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.fillText(dl,W/2,198);
+    var dlW=ctx.measureText(dl).width; ctx.restore();
+    ctx.save(); ctx.globalAlpha=0.5; ctx.fillStyle=c.h;
+    if(W/2-dlW/2-66>40){ ctx.fillRect(W/2-dlW/2-66,192,40,1.5); ctx.fillRect(W/2+dlW/2+26,192,40,1.5); }
+    ctx.restore();
+  }
   return c;
 }
 
@@ -529,12 +535,14 @@ function fModernaChrome(ctx, state, t){
   applyPhotoOverlay(ctx,state,t);
   var c=textColors(hasPhoto(state)?fInk(t,state):{h:t.textPrimary,p:t.textSecondary,a:t.accent}, t, state);
   fMasthead(ctx,c.h,'left',32,8,118,0.95);
-  var dl=(state.eyebrow||'Bambuky · Querétaro').toUpperCase();
-  ctx.save(); ctx.translate(W-68,H/2); ctx.rotate(-Math.PI/2);
-  ctx.font='500 14px '+FONT_BODY;
-  if('letterSpacing' in ctx) ctx.letterSpacing='5px';
-  ctx.fillStyle=c.p; ctx.globalAlpha=0.9; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  ctx.fillText(dl,0,0); ctx.restore();
+  if(_showEyebrow){
+    var dl=(state.eyebrow||'Bambuky · Querétaro').toUpperCase();
+    ctx.save(); ctx.translate(W-68,H/2); ctx.rotate(-Math.PI/2);
+    ctx.font='500 14px '+FONT_BODY;
+    if('letterSpacing' in ctx) ctx.letterSpacing='5px';
+    ctx.fillStyle=c.p; ctx.globalAlpha=0.9; ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.fillText(dl,0,0); ctx.restore();
+  }
   return c;
 }
 
@@ -613,23 +621,19 @@ const TEMPLATES_V = {
       }
 
     } else if(v==='moderna'){
-      /* FAMILIA MODERNA — asimetría, masthead arriba-izq, dateline vertical,
-         titular grande abajo-izquierda en tinta. */
-      var c=fModernaChrome(ctx,state,t);
-      fineRule(ctx,SX,1150,54,c.a);
-      ctx.font='300 '+Math.round(ts.fs*0.96)+'px '+FONT_TITLE; ctx.textAlign='left';
-      var end=drawAccent(ctx,state.title||'Los primeros días',SX,1232,W-SX*2,Math.round(ts.lh*0.96),1,'left',c.h,c.a);
+      var c=fModernaChrome(ctx,state,t); var tp=tPos();
+      fineRule(ctx,tp.x,tp.y(1150),54,c.a);
+      ctx.font='300 '+Math.round(ts.fs*0.96)+'px '+FONT_TITLE;
+      var end=drawAccent(ctx,state.title||'Los primeros días',tp.x,tp.y(1232),tp.maxW,Math.round(ts.lh*0.96),1,tp.align,c.h,c.a);
       if(state.subtitle){
-        ctx.font='italic 300 30px '+FONT_TITLE;
-        drawAccent(ctx,state.subtitle,SX,end+44,Math.round(W*0.70),40,1,'left',c.p,c.a);
+        ctx.font='italic 300 '+Math.round(30*_scales.subtitle)+'px '+FONT_TITLE;
+        drawAccent(ctx,state.subtitle,tp.x,end+44,Math.min(tp.maxW,Math.round(W*0.70)),40,1,tp.align,c.p,c.a);
       }
 
     } else if(v==='minima'){
-      /* FAMILIA MÍNIMA — masthead centrado y un titular susurrado abajo.
-         Máximo aire; la foto manda casi sola. */
-      var c=fMinimaChrome(ctx,state,t);
-      ctx.font='italic 300 30px '+FONT_TITLE;
-      drawAccent(ctx,state.title||'Los primeros días',W/2,1288,W-SX*2,40,1,'center',c.h,c.a);
+      var c=fMinimaChrome(ctx,state,t); var tp=tPos();
+      ctx.font='italic 300 '+Math.round(30*_scales.title)+'px '+FONT_TITLE;
+      drawAccent(ctx,state.title||'Los primeros días',tp.x,tp.y(1288),tp.maxW,40,1,tp.align,c.h,c.a);
 
     } else if(v==='split'){
       var cm=state.contrast||'light';

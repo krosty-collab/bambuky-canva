@@ -130,12 +130,15 @@
             </button>
           </div>
 
-          <label style="margin-top:10px">Posición del texto <span id="textOffsetYValue">0</span></label>
+          <label style="margin-top:10px">Posición vertical <span id="textOffsetYValue">0</span></label>
           <input id="textOffsetY" type="range" min="-200" max="200" value="0" />
+          <label style="margin-top:8px">Posición horizontal <span id="textOffsetXValue">0</span></label>
+          <input id="textOffsetX" type="range" min="-200" max="200" value="0" />
 
           <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">
-            <label class="logo-toggle"><input type="checkbox" id="logoCheck" checked /> Mostrar logo BAMBUKY</label>
-            <label class="logo-toggle"><input type="checkbox" id="frameCheck" checked /> Mostrar marco interior</label>
+            <label class="logo-toggle"><input type="checkbox" id="logoCheck" checked /> Mostrar logo</label>
+            <label class="logo-toggle" id="frameToggleRow"><input type="checkbox" id="frameCheck" checked /> Mostrar marco</label>
+            <label class="logo-toggle" id="eyebrowToggleRow"><input type="checkbox" id="eyebrowCheck" checked /> Mostrar eyebrow</label>
           </div>
         </section>
 
